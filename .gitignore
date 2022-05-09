@@ -1,5 +1,6 @@
 # Protect credentials
 settings.ini
+notebooks
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
