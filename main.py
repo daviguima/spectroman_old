@@ -34,7 +34,9 @@ class Spectroman:
             'FTP_DONE': config('FTP_DONE'),
             'FTP_FAIL': config('FTP_FAIL'),
             'OUTPUT': config('OUTPUT_PATH'),
-            'DBCON': config('CONN_STR')
+            'DBCON': config('CONN_STR'),
+            'DB_NAME': config('DB_NAME'),
+            'COLLECTION_NAME': config('COLLECTION_NAME')
         }
         return setup_dict
 
@@ -65,9 +67,11 @@ class Spectroman:
 
     def get_mongo_connection(self):
         connection_string = self.config_data['DBCON']
+        db_name = self.config_data['DB_NAME']
+        collection_name = self.config_data['COLLECTION_NAME']
         client = pymongo.MongoClient(connection_string)
-        db = client.db_spectro
-        collection = db.spectral_collection
+        db = client[db_name]
+        collection = db[collection_name]
         return collection
 
     def get_station_data_df(self, csv_file):
