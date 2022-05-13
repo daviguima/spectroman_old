@@ -164,7 +164,9 @@ def main():
                 # turn every df row into an dictionary entry and store them in a list
                 df_rows_list = df.to_dict('records')
                 # insert the list of rows in mongoDB
-                manager.log.info(f'Inserting data into mongoDB spectral_collection.')
+                dbname = manager.config_data['DB_NAME']
+                collectionname = manager.config_data['COLLECTION_NAME']
+                manager.log.info(f'Inserting data into {dbname}:{collectionname}.')
                 results = spectral_collection.insert_many(df_rows_list)
                 manager.log.info(f'Success.')
                 manager.log.info(results.inserted_ids)
