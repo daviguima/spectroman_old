@@ -8,23 +8,39 @@ import pymongo
 import pandas as pd
 
 from pathlib import Path
-from decouple import config
+from decouple import AutoConfig
 
 
 class Spectroman:
     """Provides methods for the radiometric data manipulation using FTP """
 
-    def __init__(self):
-        self.config_data = self.get_config_dict()
+    def __init__(self, in_args=None):
+
+        # Test if a settings.ini file path was given
+        if in_args[1]:
+            settings_dot_ini = in_args[1]
+        else:
+            settings_dot_ini = None
+
+        self.config_data = self.get_config_dict(ini_path=settings_dot_ini)
         self.INSTANCE_TIME_TAG = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
         logfile = os.path.join(self.config_data['OUTPUT'], 'spectroman_' + self.INSTANCE_TIME_TAG + '.log')
         self.log = self.create_log_handler(logfile)
         self.log.info(f'Running Spectral Manager from: {sys.path[0]}')
         self.log.info(f'Saving LOG at: {logfile}')
+        self.log.info(f'Input arguments: {logfile}')
 
     @staticmethod
-    def get_config_dict():
-        """Access the settings.ini file and return it as a dict"""
+    def get_config_dict(ini_path=None):
+        """
+        Access the settings.ini file in a given ini_path and return it as a dict.
+        If no ini_path is given, the default is used in the root
+        """
+        if ini_path:
+            config = AutoConfig(search_path=ini_path)
+        else:
+            config = AutoConfig()
+
         setup_dict = {
             'HOST': config('HOST_ADDRESS'),
             'USER': config('USER'),
@@ -116,9 +132,10 @@ class Spectroman:
         return logger
 
 
-def main():
+def main(in_args=None):
     """Entrypoint"""
-    manager = Spectroman()
+    input_arguments = in_args
+    manager = Spectroman(input_args=input_arguments)
     ftp = manager.connect_to_ftp()
     filenamepath = manager.ftp_get_file_list_in_path(ftp)
 
@@ -187,4 +204,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    input_args = sys.argv
+    main(input_args)
