@@ -5,10 +5,11 @@ import ftplib
 import logging
 import datetime
 import pymongo
+import decouple
 import pandas as pd
 
 from pathlib import Path
-from decouple import AutoConfig
+# from decouple import config, Config, RepositoryEnv
 
 
 class Spectroman:
@@ -17,7 +18,7 @@ class Spectroman:
     def __init__(self, input_arguments=None):
 
         # Test if a settings.ini file path was given
-        if input_arguments[1]:
+        if len(input_arguments) > 1:
             settings_dot_ini = Path(input_arguments[1])
         else:
             settings_dot_ini = None
@@ -28,7 +29,7 @@ class Spectroman:
         self.log = self.create_log_handler(logfile)
         self.log.info(f'Running Spectral Manager from: {sys.path[0]}')
         self.log.info(f'Saving LOG at: {logfile}')
-        self.log.info(f'Input arguments: {logfile}')
+        self.log.info(f'Input arguments: {settings_dot_ini}')
 
     @staticmethod
     def get_config_dict(ini_path=None):
@@ -37,11 +38,10 @@ class Spectroman:
         If no ini_path is given, the default is used in the root
         """
         if ini_path:
-            config = AutoConfig(search_path=ini_path)
+            envconf = decouple.Config(decouple.RepositoryEnv(source=ini_path))
+            config = envconf.get
         else:
-            config = AutoConfig()
-
-        print(config.search_path)
+            config = decouple.config
 
         setup_dict = {
             'HOST': config('HOST_ADDRESS'),
@@ -56,6 +56,7 @@ class Spectroman:
             'DB_NAME': config('DB_NAME'),
             'COLLECTION_NAME': config('COLLECTION_NAME')
         }
+
         return setup_dict
 
     def connect_to_ftp(self):
