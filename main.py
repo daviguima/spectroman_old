@@ -18,7 +18,7 @@ class Spectroman:
 
         # Test if a settings.ini file path was given
         if input_arguments[1]:
-            settings_dot_ini = input_arguments[1]
+            settings_dot_ini = Path(input_arguments[1])
         else:
             settings_dot_ini = None
 
@@ -40,6 +40,8 @@ class Spectroman:
             config = AutoConfig(search_path=ini_path)
         else:
             config = AutoConfig()
+
+        print(config.search_path)
 
         setup_dict = {
             'HOST': config('HOST_ADDRESS'),
