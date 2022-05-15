@@ -14,11 +14,11 @@ from decouple import AutoConfig
 class Spectroman:
     """Provides methods for the radiometric data manipulation using FTP """
 
-    def __init__(self, in_args=None):
+    def __init__(self, input_arguments=None):
 
         # Test if a settings.ini file path was given
-        if in_args[1]:
-            settings_dot_ini = in_args[1]
+        if input_arguments[1]:
+            settings_dot_ini = input_arguments[1]
         else:
             settings_dot_ini = None
 
@@ -134,8 +134,7 @@ class Spectroman:
 
 def main(in_args=None):
     """Entrypoint"""
-    input_arguments = in_args
-    manager = Spectroman(input_args=input_arguments)
+    manager = Spectroman(input_arguments=in_args)
     ftp = manager.connect_to_ftp()
     filenamepath = manager.ftp_get_file_list_in_path(ftp)
 
@@ -205,4 +204,4 @@ def main(in_args=None):
 
 if __name__ == "__main__":
     input_args = sys.argv
-    main(input_args)
+    main(in_args=input_args)
