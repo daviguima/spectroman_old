@@ -3,10 +3,13 @@ import io
 import sys
 import ftplib
 import logging
-import datetime
 import pymongo
+import datetime
+import argparse
 import pandas as pd
 from decouple import config
+
+version = '1.0.1'
 
 
 class Spectroman:
@@ -119,16 +122,19 @@ class Spectroman:
         return logger
 
 
-def main(in_args=None):
-    """Entrypoint"""
-    manager = Spectroman(input_arguments=in_args)
+def net_mode(in_args=None):
+    """
+    SPECTROMAN Default mode:
+    given a settings.ini configuration file, connect to a FTP server, retrieve a
+    list of the files inside the FTP server, and try to insert them into a MongoDB.
+    """
     ftp = manager.connect_to_ftp()
     filenamepath = manager.ftp_get_file_list_in_path(ftp)
 
     total = len(filenamepath)
     manager.log.info(f'{total} total files found...')
     manager.log.info('Attempting to copy...')
-    # Destination = manager.config_data['OUTPUT']
+    # Destination = manager.config_data['OUTPUT']  # TODO: fix destination of the copied files.
 
     spectral_collection, client = manager.get_mongo_connection()
     try:
@@ -195,6 +201,36 @@ def main(in_args=None):
         ftp.quit()
 
 
+def pro_mode(in_args=None):
+    """
+    SPECTROMAN Processing mode:
+    No network tasks will be performed. Connects to a MongoDB given the setting.ini
+    configuration file and apply pre-defined processing routines over its data.
+    """
+    manager.log.info(f'Processing mode selected.')
+    manager.log.info(f'No network tasks will be performed. Connects to a MongoDB given the setting.ini'
+                     f' configuration file and apply pre-defined processing routines over its data.')
+    pass
+
+
 if __name__ == "__main__":
-    input_args = sys.argv
-    main(in_args=input_args)
+
+    parser = argparse.ArgumentParser(
+        description='SPECTROMAN - Spectral Manager for SPECTROSED '
+                    'Fetch data over a FTP server and implements pre and post-processing routines.')
+    parser.add_argument("-n", "--network", help="Run SPECTROMAN over a FTP and feed the collected data to a DB",
+                        action='store_true')
+    parser.add_argument('-p', '--process', help='Run in processing mode', action='store_true')
+    parser.add_argument('-v', '--version', help='Displays current package version.', action='store_true')
+    # Converts the input arguments from Namespace() to dict
+    args = parser.parse_args().__dict__
+    # Instantiate a Spectroman class object in order to exploit its logging capabilities
+    manager = Spectroman(input_arguments=args)
+
+    if args['version']:
+        manager.log.info(f'SPECTROMAN version: {version}')
+    elif args['network']:
+        net_mode(in_args=args)
+    elif args['process']:
+        pro_mode(in_args=args)
+
