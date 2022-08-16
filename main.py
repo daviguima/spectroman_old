@@ -128,7 +128,7 @@ def net_mode(in_args=None):
     given a settings.ini configuration file, connect to a FTP server, retrieve a
     list of the files inside the FTP server, and try to insert them into a MongoDB.
     """
-    ftp = manager.connect_to_ftp()
+    ftp = manager.connect_to_ftp()  # TODO: write try-catch for exceptions.
     filenamepath = manager.ftp_get_file_list_in_path(ftp)
 
     total = len(filenamepath)
@@ -213,6 +213,15 @@ def pro_mode(in_args=None):
     pass
 
 
+def dl_mode(in_args=None):
+    """
+    SPECTROMAN Downlaod mode:
+    """
+    # TODO: Impelemnt the local donwloader logic here.
+    manager.log.info('Downloading files locally... #SQN')
+    pass
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
@@ -221,6 +230,7 @@ if __name__ == "__main__":
     parser.add_argument("-n", "--network", help="Run SPECTROMAN over a FTP and feed the collected data to a DB",
                         action='store_true')
     parser.add_argument('-p', '--process', help='Run in processing mode', action='store_true')
+    parser.add_argument('-l', '--local', help='Run in local download mode', action='store_true')
     parser.add_argument('-v', '--version', help='Displays current package version.', action='store_true')
     # Converts the input arguments from Namespace() to dict
     args = parser.parse_args().__dict__
@@ -233,4 +243,6 @@ if __name__ == "__main__":
         net_mode(in_args=args)
     elif args['process']:
         pro_mode(in_args=args)
+    elif args['local']:
+        dl_mode(in_args=args)
 
