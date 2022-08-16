@@ -227,7 +227,6 @@ def dl_mode(in_args=None):
     """
     SPECTROMAN Downlaod mode:
     """
-    Destination = manager.config_data['OUTPUT']
     ftp = manager.connect_to_ftp()
     filenamepath = manager.ftp_get_file_list_in_path(ftp)
 
