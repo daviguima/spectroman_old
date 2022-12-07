@@ -87,17 +87,17 @@ class Spectroman:
         # get only the column names from the file
         colnames = list(pd.read_csv(csv_file, skiprows=1, error_bad_lines=False, warn_bad_lines=True,
                                     nrows=1, engine='python').columns)
-
+        self.log.info(f'Number of columns founds in file = {len(colnames)}.')
         # Once read the pointer needs to return to the head of the _io.BytesIO object
         csv_file.seek(0)
 
         # https://stackoverflow.com/questions/16108526/how-to-obtain-the-total-numbers-of-rows-from-a-csv-file-in-python
-        row_count = sum(1 for row in csv_file)
-        if row_count <= 3:
-            self.log.info(f'Insufficient number of rows in file (row count = {row_count}).')
-            self.log.info(f'Skipping and returning empty DataFrame.')
-            df = pd.DataFrame()
-            return df
+        # row_count = sum(1 for row in csv_file)
+        # if row_count < 1:
+        #     self.log.info(f'Insufficient number of rows in file (row count = {row_count}).')
+        #     self.log.info(f'Skipping and returning empty DataFrame.')
+        #     df = pd.DataFrame()
+        #     return df
 
         try:
             df = pd.read_csv(csv_file,
@@ -110,6 +110,7 @@ class Spectroman:
                              error_bad_lines=False,
                              warn_bad_lines=True,
                              engine='python')
+
         except pd.errors.ParserError as e:
             self.log.info(f'ERROR: {e}')
             self.log.info(f'Returning empty DataFrame.')
