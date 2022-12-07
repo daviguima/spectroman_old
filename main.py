@@ -85,7 +85,8 @@ class Spectroman:
 
     def get_station_data_df(self, csv_file):
         # get only the column names from the file
-        colnames = list(pd.read_csv(csv_file, skiprows=1, on_bad_lines='warn', nrows=1, engine='python').columns)
+        colnames = list(pd.read_csv(csv_file, skiprows=1, error_bad_lines=False, warn_bad_lines=True,
+                                    nrows=1, engine='python').columns)
 
         # Once read the pointer needs to return to the head of the _io.BytesIO object
         csv_file.seek(0)
@@ -106,7 +107,8 @@ class Spectroman:
                              na_values="-99",
                              parse_dates=['TIMESTAMP'],
                              infer_datetime_format=True,
-                             on_bad_lines='warn',
+                             error_bad_lines=False,
+                             warn_bad_lines=True,
                              engine='python')
         except pd.errors.ParserError as e:
             self.log.info(f'ERROR: {e}')
