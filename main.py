@@ -87,8 +87,18 @@ class Spectroman:
         # get only the column names from the file
         colnames = list(pd.read_csv(csv_file, skiprows=1,
                         on_bad_lines='warn', nrows=1).columns)
+
         # Once read the pointer needs to return to the head of the _io.BytesIO object
         csv_file.seek(0)
+
+        # https://stackoverflow.com/questions/16108526/how-to-obtain-the-total-numbers-of-rows-from-a-csv-file-in-python
+        row_count = sum(1 for row in csv_file)
+        if row_count <= 3:
+            self.log.info(f'Insufficient number of rows in file (row count = {row_count}).')
+            self.log.info(f'Skipping and returning empty DataFrame.')
+            df = pd.DataFrame()
+            return df
+
         try:
             df = pd.read_csv(csv_file,
                              names=colnames,
@@ -113,7 +123,7 @@ class Spectroman:
         logger = logging.getLogger(fname)
         logger.setLevel(logging.INFO)
         formatter = logging.Formatter(
-            '%(asctime)s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
+            '%(asctime)s - %(message)s', datefmt='%H:%M:%S')
         # Output log to file
         fileHandler = logging.FileHandler(fname)
         fileHandler.setLevel(logging.INFO)
