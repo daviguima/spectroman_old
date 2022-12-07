@@ -85,8 +85,7 @@ class Spectroman:
 
     def get_station_data_df(self, csv_file):
         # get only the column names from the file
-        colnames = list(pd.read_csv(csv_file, skiprows=1,
-                        on_bad_lines='warn', nrows=1).columns)
+        colnames = list(pd.read_csv(csv_file, skiprows=1, on_bad_lines='warn', nrows=1, engine='python').columns)
 
         # Once read the pointer needs to return to the head of the _io.BytesIO object
         csv_file.seek(0)
@@ -107,7 +106,8 @@ class Spectroman:
                              na_values="-99",
                              parse_dates=['TIMESTAMP'],
                              infer_datetime_format=True,
-                             on_bad_lines='warn')
+                             on_bad_lines='warn',
+                             engine='python')
         except pd.errors.ParserError as e:
             self.log.info(f'ERROR: {e}')
             self.log.info(f'Returning empty DataFrame.')
@@ -142,7 +142,8 @@ def net_mode(in_args=None):
     """
     SPECTROMAN Default mode:
     given a settings.ini configuration file, connect to a FTP server, retrieve a
-    list of the files inside the FTP server, and try to insert them into a MongoDB.
+    list of the files inside the FTP server, and try to insert them into a MongoDB
+    specified inside the same settings.ini file.
     """
     ftp = manager.connect_to_ftp()  # TODO: write try-catch for exceptions.
     filenamepath = manager.ftp_get_file_list_in_path(ftp)
