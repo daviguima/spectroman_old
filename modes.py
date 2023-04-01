@@ -57,7 +57,15 @@ class Modes:
                 # https://stackoverflow.com/questions/48815110/read-a-csv-file-stored-in-a-ftp-in-python
                 virtual_file = io.BytesIO()
                 manager.log.info(f'Downloading remote file content to local dummy copy...')
-                ftp.retrbinary("RETR {}".format(fn), virtual_file.write)
+                try:
+                    # Counter-measure for when the PCD's CRBOX is writing to the same file in the FTP:
+                    # 550 The process cannot access the file because it is being used by another process.
+                    ftp.retrbinary("RETR {}".format(fn), virtual_file.write)
+                except Exception as e:
+                    manager.log.info(f'Error: {e}')
+                    manager.log.info(f'Skipping to next file.')
+                    continue
+
                 manager.log.info(f'Download completed.')
                 # after writing: go back to the start of the virtual file
                 virtual_file.seek(0)
@@ -86,12 +94,12 @@ class Modes:
                         manager.log.info(f'Success.')
                         manager.log.info(results.inserted_ids)
 
-                manager.log.info(f'Saving RAW PCD data to backup DB {dbname}:{raw_coll_name}')
+                manager.log.info(f'Saving RAW PCD data to backup {dbname}:{raw_coll_name}')
                 virtual_file.seek(0)
-                raw_text_dict = {'file_name': fn, 'fail_status': file_fail_flag, 'raw_data': virtual_file}
+                raw_text_dict = {'file_name': fn, 'fail_status': file_fail_flag, 'raw_data': virtual_file.getvalue()}
                 raw_insertion_results = bkp_collection.insert_one(raw_text_dict)
                 manager.log.info(f'Success.')
-                manager.log.info(raw_insertion_results.inserted_ids)
+                manager.log.info(raw_insertion_results.inserted_id)
 
                 manager.log.info(f'Parsing completed, closing virtual file.')
                 virtual_file.close()

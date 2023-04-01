@@ -7,7 +7,6 @@ import datetime
 import numpy as np
 import pandas as pd
 from decouple import config  # python-decouple
-from datetime import datetime
 from modes import Modes
 
 
@@ -26,9 +25,14 @@ def get_config_dict():
         'OUTPUT': config('OUTPUT'),
         'DBCON': config('DBCON'),
         'DB_NAME': config('DB_NAME'),
+
         'COLLECTION_DF': config('COLLECTION_DF'),
         'COLLECTION_RAW': config('COLLECTION_RAW'),
-        'COLLECTION_MAIN': config('COLLECTION_MAIN')
+        'COLLECTION_MAIN': config('COLLECTION_MAIN'),
+
+        'DBCON_ATLAS': config('DBCON_ATLAS'),
+        'DB_ATLAS': config('DB_ATLAS'),
+        'COLLECTION_ATLAS': config('COLLECTION_ATLAS')
     }
     return setup_dict
 
@@ -104,7 +108,7 @@ class Spectroman:
             remote_fnames.remove(".")
         if sort_recent:
             remote_fnames = sorted(remote_fnames,
-                                   key=lambda s: datetime.strptime(s.split('.')[0], '%Y-%m-%d_%H-%M-%S'),
+                                   key=lambda s: datetime.datetime.strptime(s.split('.')[0], '%Y-%m-%d_%H-%M-%S'),
                                    reverse=True)
         return remote_fnames
 
