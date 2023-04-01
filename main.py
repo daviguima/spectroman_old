@@ -84,12 +84,6 @@ class Spectroman:
         return collection, client
 
     def get_station_data_df(self, csv_file):
-        # get only the column names from the file
-        colnames = list(pd.read_csv(csv_file, skiprows=1, error_bad_lines=False, warn_bad_lines=True,
-                                    nrows=1, engine='python').columns)
-        self.log.info(f'Number of columns founds in file = {len(colnames)}.')
-        # Once read the pointer needs to return to the head of the _io.BytesIO object
-        csv_file.seek(0)
 
         # https://stackoverflow.com/questions/16108526/how-to-obtain-the-total-numbers-of-rows-from-a-csv-file-in-python
         # row_count = sum(1 for row in csv_file)
@@ -98,22 +92,46 @@ class Spectroman:
         #     self.log.info(f'Skipping and returning empty DataFrame.')
         #     df = pd.DataFrame()
         #     return df
-
+        go_on = True
+        self.log.info(f'Retrieving column names for file: {self.fn}')
         try:
-            df = pd.read_csv(csv_file,
-                             names=colnames,
-                             skiprows=4,
-                             index_col=False,
-                             na_values="-99",
-                             parse_dates=['TIMESTAMP'],
-                             infer_datetime_format=True,
-                             error_bad_lines=False,
-                             warn_bad_lines=True,
-                             engine='python')
+            # get only the column names from the file
+            colnames = list(pd.read_csv(csv_file, skiprows=1,
+                                        # error_bad_lines=False,
+                                        # warn_bad_lines=True,
+                                        # on_bad_lines=self.line_skipper,
+                                        on_bad_lines='error',
+                                        nrows=1, engine='python').columns)
+            self.log.info(f'Number of columns founds in file = {len(colnames)}.')
+            # Once read the pointer needs to return to the head of the _io.BytesIO object
+            csv_file.seek(0)
 
         except pd.errors.ParserError as e:
+            self.log.info(f'Broken file header')
             self.log.info(f'ERROR: {e}')
             self.log.info(f'Returning empty DataFrame.')
+            go_on = False
+
+        if go_on:
+            # Try to use the colnames found in the file to capture the file content.
+            try:
+                df = pd.read_csv(csv_file,
+                                 names=colnames,
+                                 skiprows=4,
+                                 index_col=False,
+                                 na_values="-99",
+                                 parse_dates=['TIMESTAMP'],
+                                 infer_datetime_format=True,
+                                 on_bad_lines='warn',
+                                 # error_bad_lines=False,
+                                 # warn_bad_lines=True,
+                                 engine='python')
+
+            except pd.errors.ParserError as e:
+                self.log.info(f'ERROR: {e}')
+                self.log.info(f'Returning empty DataFrame.')
+                df = pd.DataFrame()
+        else:
             df = pd.DataFrame()
 
         return df
@@ -162,6 +180,7 @@ def net_mode(in_args=None):
             file_fail_flag = False
             # localcopy = Path(Destination + os.path.basename(fn))
             manager.log.info(f'Processing {n + 1} of {total}: {fn}...')
+            manager.fn = fn
             # manager.log.info(f'Saving copy at: {localcopy}')
             # ftp.retrbinary('RETR ' + fn, open(localcopy, 'wb').write)
             manager.log.info(f'Creating empty dummy file locally.')
