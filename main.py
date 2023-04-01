@@ -6,7 +6,9 @@ import logging
 import pymongo
 import datetime
 import argparse
+import numpy as np
 import pandas as pd
+
 from decouple import config
 
 version = '1.0.1'
@@ -83,6 +85,22 @@ class Spectroman:
         collection = db[collection_name]
         return collection, client
 
+    @staticmethod
+    def pcdtxt2array(dir):
+        # https://github.com/Tayline13/SPECTROSED/blob/main/data_cleaning.ipynb
+        file_arr = np.genfromtxt(dir, delimiter = ',', skip_header = 1, dtype = 'str', invalid_raise = False)
+        if (file_arr.ndim == 1):
+            file_arr = np.array([], dtype = 'str')
+        else:
+            file_arr = file_arr[1:]
+            if(len(file_arr) > 0):
+                if(file_arr[0][0] == '"TS"' or file_arr[0][0] == 'TS' or file_arr[0][0] == '""' or file_arr[0][0] == ''):
+                    file_arr = file_arr[1:]
+                    if(len(file_arr) > 0):
+                        if(file_arr[0][0] == '""' or file_arr[0][0] == ''):
+                            file_arr = file_arr[1:]
+        return file_arr
+    
     def get_station_data_df(self, csv_file):
 
         # https://stackoverflow.com/questions/16108526/how-to-obtain-the-total-numbers-of-rows-from-a-csv-file-in-python
@@ -96,17 +114,12 @@ class Spectroman:
         self.log.info(f'Retrieving column names for file: {self.fn}')
         try:
             # get only the column names from the file
-            colnames = list(pd.read_csv(csv_file, skiprows=1,
-                                        # error_bad_lines=False,
-                                        # warn_bad_lines=True,
-                                        # on_bad_lines=self.line_skipper,
-                                        on_bad_lines='error',
-                                        nrows=1, engine='python').columns)
+            colnames = np.genfromtxt(csv_file, delimiter = ',', dtype = 'str', invalid_raise=False, skip_header=1, max_rows=1)
             self.log.info(f'Number of columns founds in file = {len(colnames)}.')
             # Once read the pointer needs to return to the head of the _io.BytesIO object
             csv_file.seek(0)
 
-        except pd.errors.ParserError as e:
+        except Exception as e:
             self.log.info(f'Broken file header')
             self.log.info(f'ERROR: {e}')
             self.log.info(f'Returning empty DataFrame.')
@@ -115,19 +128,13 @@ class Spectroman:
         if go_on:
             # Try to use the colnames found in the file to capture the file content.
             try:
-                df = pd.read_csv(csv_file,
-                                 names=colnames,
-                                 skiprows=4,
-                                 index_col=False,
-                                 na_values="-99",
-                                 parse_dates=['TIMESTAMP'],
-                                 infer_datetime_format=True,
-                                 on_bad_lines='warn',
-                                 # error_bad_lines=False,
-                                 # warn_bad_lines=True,
-                                 engine='python')
+                pcd_rows = self.pcdtxt2array(csv_file)
+                self.log.info(f'Number of lines founds in file = {len(pcd_rows)}.')
+                self.log.info(f'Number of columns founds in array = {len(pcd_rows[0])}.')
+                self.log.info(f'Generating pd.DataFrame from array data.')
+                df = pd.DataFrame(pcd_rows, columns=colnames)
 
-            except pd.errors.ParserError as e:
+            except Exception as e:
                 self.log.info(f'ERROR: {e}')
                 self.log.info(f'Returning empty DataFrame.')
                 df = pd.DataFrame()
@@ -186,10 +193,8 @@ def net_mode(in_args=None):
             manager.log.info(f'Creating empty dummy file locally.')
             # https://stackoverflow.com/questions/48815110/read-a-csv-file-stored-in-a-ftp-in-python
             virtual_file = io.BytesIO()
-            manager.log.info(
-                f'Downloading remote file content to local dummy copy...')
+            manager.log.info(f'Downloading remote file content to local dummy copy...')
             ftp.retrbinary("RETR {}".format(fn), virtual_file.write)
-            # after writing: go back to the start of the virtual file
             manager.log.info(f'Download completed.')
             # after writing: go back to the start of the virtual file
             virtual_file.seek(0)
