@@ -37,8 +37,6 @@ class Modes:
 
         total = len(filenamepath)
         manager.log.info(f'{total} total files found...')
-        manager.log.info('Attempting to copy...')
-        # Destination = manager.config_data['OUTPUT']  # TODO: fix destination of the copied files.
 
         dbname = manager.config_data['DB_NAME']
         collectionname = manager.config_data['COLLECTION_DF']
@@ -146,7 +144,7 @@ class Modes:
         manager.log.info(f'{total} total files found...')
         manager.log.info('Attempting to copy...')
         for n, fn in enumerate(filenamepath):
-            localcopy = manager.config_data['OUTPUT'] + os.path.basename(fn)
+            localcopy = manager.config_data['LOG_OUTPUT'] + os.path.basename(fn)
             print(f'Downloading {n + 1} of {total}: {fn}...')
             print(f'Saving copy at: {localcopy}')
             ftp.retrbinary('RETR ' + fn, open(localcopy, 'wb').write)

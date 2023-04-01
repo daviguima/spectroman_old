@@ -15,14 +15,14 @@ def get_config_dict():
     Access the settings.ini file and return it as a dict.
     """
     setup_dict = {
-        'HOST': config('HOST_ADDRESS'),
-        'USER': config('USER'),
-        'PASS': config('PASS'),
+        'FTP_HOST': config('FTP_HOST'),
+        'FTP_USER': config('FTP_USER'),
+        'FTP_PASS': config('FTP_PASS'),
         'FTP_ROOT': config('FTP_ROOT'),
         'FTP_TODO': config('FTP_TODO'),
         'FTP_DONE': config('FTP_DONE'),
         'FTP_FAIL': config('FTP_FAIL'),
-        'OUTPUT': config('OUTPUT'),
+        'LOG_OUTPUT': config('LOG_OUTPUT'),
         'DBCON': config('DBCON'),
         'DB_NAME': config('DB_NAME'),
 
@@ -66,11 +66,11 @@ class Spectroman:
     def __init__(self, input_arguments=None):
         self.config_data = get_config_dict()
         self.INSTANCE_TIME_TAG = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
-        if os.path.exists(self.config_data['OUTPUT']):
+        if os.path.exists(self.config_data['LOG_OUTPUT']):
             logfile = os.path.join(
-                self.config_data['OUTPUT'], 'spectroman_' + self.INSTANCE_TIME_TAG + '.log')
+                self.config_data['LOG_OUTPUT'], 'spectroman_' + self.INSTANCE_TIME_TAG + '.log')
         else:
-            print(f'Warning: OUTPUT path not found inside settings.ini!')
+            print(f'Warning: LOG_OUTPUT path not found inside settings.ini!')
             logfile = os.path.join(os.getcwd(), 'spectroman_' + self.INSTANCE_TIME_TAG + '.log')
 
         self.log = self.create_log_handler(logfile)
@@ -81,10 +81,10 @@ class Spectroman:
 
     def connect_to_ftp(self):
         self.log.info(
-            f'Attempting connection to host: {self.config_data["HOST"]}')
-        ftp = ftplib.FTP(host=self.config_data["HOST"])
-        ftp.login(user=self.config_data["USER"],
-                  passwd=self.config_data["PASS"])
+            f'Attempting connection to host: {self.config_data["FTP_HOST"]}')
+        ftp = ftplib.FTP(host=self.config_data["FTP_HOST"])
+        ftp.login(user=self.config_data["FTP_USER"],
+                  passwd=self.config_data["FTP_PASS"])
         self.log.info('Succes.')
         return ftp
 
