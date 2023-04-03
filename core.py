@@ -197,57 +197,58 @@ class Spectroman:
         """
         Given a list of query result dictionaries, compute the Rrs over them.
         """
-        # Convert the query list result to a pd.DataFrame
-        df_entries = pd.DataFrame(query_list)
+        post_documents = []
+        total = len(query_list)
+        for n, document in enumerate(query_list):
+            self.log.info(f'Processing {n+1}/{total} ...')
+            to_replace = ['-99','"-INF"','""','"']
+            doc = {key: np.nan if value in to_replace else value for key, value in document.items() }
 
-        # Drop no-data
-        df_entries.replace('-99', np.nan, inplace=True)
-        df_entries.replace('"-INF"', np.nan, inplace=True)
-        df_entries.replace('""', np.nan, inplace=True)
-        df_entries.replace('"', np.nan, inplace=True)
+            r_ed=doc['"CalibData_c1(76)"']
+            r_ld=doc['"CalibData_c2(76)"']
+            r_lu=doc['"CalibData_c4(76)"']
+            ir_ed=doc['"CalibData_c1(136)"']
+            ir_ld=doc['"CalibData_c2(136)"']
+            ir_lu=doc['"CalibData_c4(136)"']
+            
+            try:
+                # Compute Rrs for RED:650nm
+                rrs650 = Equations.calc_reflectance(ed=r_ed,
+                                                    ld=r_ld,
+                                                    lu=r_lu)
 
+                # Compute Rrs for IR:850nm
+                rrs850 = Equations.calc_reflectance(ed=ir_ed,
+                                                    ld=ir_ld,
+                                                    lu=ir_lu)
+                
+                # Compute SPM
+                css = Equations.css_jirau(rrs850,rrs650)
 
-        # Convert the query data from object to float
-        df_float = df_entries[['"CalibData_c1(76)"','"CalibData_c1(136)"','"CalibData_c2(76)"',
-                            '"CalibData_c2(136)"','"CalibData_c4(76)"','"CalibData_c4(136)"',]].astype(float)
+            except Exception as e:
+                self.log.info(f'Exception: {e}')
+                rrs650 = np.nan
+                rrs850 = np.nan
+                css = np.nan
 
-        # Compute Rrs for RED:650nm
-        rrs650 = Equations.calc_reflectance(ed=df_float['"CalibData_c1(76)"'],
-                                            ld=df_float['"CalibData_c2(76)"'],
-                                            lu=df_float['"CalibData_c4(76)"'])
+            # Parse the str objects to datetime64
+            timestamp = pd.to_datetime(doc['"TIMESTAMP"'], format='"%Y-%m-%d %H:%M:%S"')
 
-        # Compute Rrs for IR:850nm
-        rrs850 = Equations.calc_reflectance(ed=df_float['"CalibData_c1(136)"'],
-                                            ld=df_float['"CalibData_c2(136)"'],
-                                            lu=df_float['"CalibData_c4(136)"'])
-
-        # Rename columns to something more meaningful
-        df_float.rename(columns={'"CalibData_c1(76)"':'Ed650',
-                                '"CalibData_c2(76)"':'Ld650',
-                                '"CalibData_c4(76)"':'Lu650',
-                                '"CalibData_c1(136)"':'Ed850',
-                                '"CalibData_c2(136)"':'Ld850',
-                                '"CalibData_c4(136)"':'Lu850'}, inplace=True)
-
-        # Add the computed Rrs's as new columns
-        df_float['Rrs650'] = rrs650
-        df_float['Rrs850'] = rrs850
-        
-        css = Equations.css_jirau(rrs850,rrs650)
-        df_float['css'] = css
-
-        # Copy the ID column of the original query and paste it at the beginning
-        df_float.insert(loc=0, column='_id', value=df_entries['_id'])
-
-        # Parse the str objects to datetime64
-        timestamp = pd.to_datetime(df_entries['"TIMESTAMP"'], format='"%Y-%m-%d %H:%M:%S"')
-
-        # Insert them after the ID column
-        df_float.insert(loc=1, column='date', value=timestamp)
-        
-        # Convert them back to a list of dicts
-        result_dict_list = df_float.to_dict(orient='records')
-        return result_dict_list
+            new_entry = {'parent_id': doc['_id'],
+                         'date': timestamp,
+                         'Ed650': r_ed,
+                         'Ld650': r_ld,
+                         'Lu650': r_lu,
+                         'Ed850': ir_ed,
+                         'Ld850': ir_ld,
+                         'Lu850': ir_lu,
+                         'Rrs650': rrs650,
+                         'Rrs850': rrs850,
+                         'css': css}
+            
+            post_documents.append(new_entry)
+        self.log.info(f'Processing completed for parameters: Rrs650, Rrs650 and CSS.')
+        return post_documents
 
     @staticmethod
     def create_log_handler(fname):

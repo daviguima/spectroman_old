@@ -8,13 +8,22 @@ class Equations:
 
     @staticmethod
     def calc_reflectance(ed, lu, ld, rho=0.028):
-        rrs = (lu - rho * ld) / ed
-        return rrs
+        try:
+            ed = float(ed)
+            lu = float(lu)
+            ld = float(ld)
+
+            rrs = (lu - rho * ld) / ed
+        except Exception as e:
+            print(e)
+            rrs = np.nan
+            return rrs
+        return round(rrs,3)
 
     @staticmethod
-    def css_jirau(rs850, rs650):
+    def css_jirau(IR, RED):
         try:
-            css = 13.294 * math.exp(5.2532 * (rs850 / rs650))
+            css = 13.294 * math.exp(5.2532 * (IR / RED))
         except Exception as e:
             print(e)
             css = np.nan
