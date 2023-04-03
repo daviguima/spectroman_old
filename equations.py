@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 
@@ -12,7 +13,8 @@ class Equations:
 
     @staticmethod
     def css_jirau(rs850, rs650):
-        pass
+        css = 13.294 * math.exp(5.2532 * (rs850 / rs650))
+        return css
 
     @staticmethod
     def chla_gitelson(rs665, rs715, rs750):

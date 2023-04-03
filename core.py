@@ -213,13 +213,13 @@ class Spectroman:
 
         # Compute Rrs for RED:650nm
         rrs650 = Equations.calc_reflectance(ed=df_float['"CalibData_c1(76)"'],
-                                            lu=df_float['"CalibData_c2(76)"'],
-                                            ld=df_float['"CalibData_c4(76)"'])
+                                            ld=df_float['"CalibData_c2(76)"'],
+                                            lu=df_float['"CalibData_c4(76)"'])
 
         # Compute Rrs for IR:850nm
         rrs850 = Equations.calc_reflectance(ed=df_float['"CalibData_c1(136)"'],
-                                            lu=df_float['"CalibData_c2(136)"'],
-                                            ld=df_float['"CalibData_c4(136)"'])
+                                            ld=df_float['"CalibData_c2(136)"'],
+                                            lu=df_float['"CalibData_c4(136)"'])
 
         # Rename columns to something more meaningful
         df_float.rename(columns={'"CalibData_c1(76)"':'Ed650',
@@ -232,6 +232,9 @@ class Spectroman:
         # Add the computed Rrs's as new columns
         df_float['Rrs650'] = rrs650
         df_float['Rrs850'] = rrs850
+        
+        css = Equations.css_jirau(rrs850,rrs650)
+        df_float['css'] = css
 
         # Copy the ID column of the original query and paste it at the beginning
         df_float.insert(loc=0, column='_id', value=df_entries['_id'])
