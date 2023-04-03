@@ -126,8 +126,8 @@ class Modes:
         manager.log.info(f'Connects to MongoDB and apply processing routines over its data.')
 
         # Connect and retrieve files inside collection jirau_df
-        spectral_collection, _, _ = manager.get_mongo_connection(collection=manager.config_data['COLLECTION_DF'])
-        main_collection, _, _ = manager.get_mongo_connection(collection=manager.config_data['COLLECTION_MAIN'])
+        spectral_collection, spectral_client, _ = manager.get_mongo_connection(collection=manager.config_data['COLLECTION_DF'])
+        main_collection, main_client, _ = manager.get_mongo_connection(collection=manager.config_data['COLLECTION_MAIN'])
         
         query = { "$or": [ { "processed": False }, { "processed": { "$exists": False } } ] }
 
@@ -156,6 +156,8 @@ class Modes:
                 manager.log.info(f"Skipping entry {document['_id']}")
         
         manager.log.info(f"Processing mode completed.")
+        spectral_client.close()
+        main_client.close()
         pass
 
     def update_atlas(self):
@@ -167,7 +169,7 @@ class Modes:
         manager = self.m 
         manager.log.info(f'Atlas collection update mode selected.')
         # Connect and retrieve files inside collection jirau_df
-        main_collection, _, _ = manager.get_mongo_connection(collection=manager.config_data['COLLECTION_MAIN'])
+        main_collection, main_client, _ = manager.get_mongo_connection(collection=manager.config_data['COLLECTION_MAIN'])
         
         query = { "$or": [ { "on_cloud": False }, { "on_cloud": { "$exists": False } } ] }
         # Find all documents matching the query and store them in a list
@@ -180,7 +182,7 @@ class Modes:
         # open connection to Atlas
         atlas_db_name = manager.config_data['DB_ATLAS']
         atlas_coll_name = manager.config_data['COLLECTION_ATLAS']
-        atlas_collection, _, _ = manager.get_mongo_connection(conn_str=manager.config_data['DBCON_ATLAS'],
+        atlas_collection, atlas_client, _ = manager.get_mongo_connection(conn_str=manager.config_data['DBCON_ATLAS'],
                                                               db_name=atlas_db_name,
                                                               collection=atlas_coll_name)
         
@@ -201,6 +203,8 @@ class Modes:
                 manager.log.info(f"Skipping entry {document['_id']}")
         
         manager.log.info(f"Atlas update completed.")
+        atlas_client.close()
+        main_client.close()
         pass
 
 
