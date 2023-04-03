@@ -23,7 +23,7 @@ class Equations:
     @staticmethod
     def css_jirau(IR, RED):
         try:
-            css = 13.294 * math.exp(5.2532 * (IR / RED))
+            css = [13.294 * math.exp(5.2532 * (rrs850 / rrs650)) for rrs850,rrs650 in zip(IR, RED)]
         except Exception as e:
             print(e)
             css = np.nan

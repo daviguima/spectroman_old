@@ -207,8 +207,6 @@ class Modes:
         main_client.close()
         pass
 
-
-
     def download_mode(self):
         """
         SPECTROMAN Downlaod mode:
