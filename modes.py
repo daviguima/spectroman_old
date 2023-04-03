@@ -46,11 +46,8 @@ class Modes:
         try:
             for n, fn in enumerate(filenamepath):
                 file_fail_flag = False
-                # localcopy = Path(Destination + os.path.basename(fn))
                 manager.log.info(f'Processing {n + 1} of {total}: {fn}...')
                 manager.fn = fn
-                # manager.log.info(f'Saving copy at: {localcopy}')
-                # ftp.retrbinary('RETR ' + fn, open(localcopy, 'wb').write)
                 manager.log.info(f'Creating empty dummy file locally.')
                 # https://stackoverflow.com/questions/48815110/read-a-csv-file-stored-in-a-ftp-in-python
                 virtual_file = io.BytesIO()
@@ -122,14 +119,55 @@ class Modes:
     def processing_mode(self):
         """
         SPECTROMAN Processing mode:
-        Connects to MongoDB and apply processing routines over its data.
+        Connects to MongoDB and apply processing routines over the its data.
         """
-        manager = self.m
+        manager = self.m 
         manager.log.info(f'Processing mode selected.')
         manager.log.info(f'Connects to MongoDB and apply processing routines over its data.')
 
-        # mongodb+srv://spectroman:<password>@spectro-cluster0.1qj0y.mongodb.net/?retryWrites=true&w=majority
+        # Connect and retrieve files inside collection jirau_df
+        spectral_collection, _, _ = manager.get_mongo_connection(collection='jirau_df_mockup')
+        main_collection, _, _ = manager.get_mongo_connection(collection='jirau_main')
+        
+        query = { "$or": [ { "processed": False }, { "processed": { "$exists": False } } ] }
+
+        # Find all documents matching the query and store them in a list
+        manager.log.info(f'Retrieving unprocessed data from Database...')
+        mdb_query_data = list(spectral_collection.find(query))
+        
+        total = len(mdb_query_data)
+        manager.log.info(f'Done : {total} entries where found.')
+
+        manager.log.info(f'Computing Rrs over data for 650 and 850nm...')
+        processed_queries = manager.update_query2rrs(query_list=mdb_query_data)
+
+        # Update each document with a new 'result' field, a 'date' field, and set 'processed' to True
+        for document in processed_queries:
+            # Keep track of the entries that are already processed
+            update = { "$set": { "date": document['date'], "processed": True } }
+            spectral_collection.update_one({ "_id": document['_id'] }, update)
+
+            # Add the new fields to collection jirau_main
+            main_collection.insert_one(document)
+        
+        # Update the 'processed' field in the consumed collection
+        spectral_collection.update_many(query, { "$set": { "processed": True } })
+        
+        manager.log.info(f"{len(processed_queries)} documents updated.")
         pass
+
+    def update_dashboard(self):
+        """
+        SPECTROMAN Update Atlas Dashboard mode:
+        Fetch the entries in Collection:MAIN and connects to the Atlas cloud instance
+        to replicate the content for both collections in order to feed the dashboard.
+        """
+        manager = self.m
+        atlas_collection, client, db = manager.get_mongo_connection(conn_str=manager.config_data['DBCON_ATLAS'],
+                                                        db_name=manager.config_data['DB_ATLAS'],
+                                                        collection=manager.config_data['COLLECTION_ATLAS'])
+
+        atlas_collection.insert_one({'x': 1})
 
     def download_mode(self):
         """
