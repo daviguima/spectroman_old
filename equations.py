@@ -11,6 +11,10 @@ class Equations:
         return rrs
 
     @staticmethod
+    def css_jirau(rs850, rs650):
+        pass
+
+    @staticmethod
     def chla_gitelson(rs665, rs715, rs750):
         # Gitelson 2008
         # RED, RED_EDGE_1, RED_EDGE_2

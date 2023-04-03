@@ -142,8 +142,9 @@ class Modes:
         processed_queries = manager.update_query2rrs(query_list=mdb_query_data)
 
         # Update each document with a new 'result' field, a 'date' field, and set 'processed' to True
-        for document in processed_queries:
+        for n, document in enumerate(processed_queries):
             # Keep track of the entries that are already processed
+            manager.log.info(f'Updating {n+1} / {total} ...')
             update = { "$set": { "date": document['date'], "processed": True } }
             spectral_collection.update_one({ "_id": document['_id'] }, update)
 
@@ -153,7 +154,7 @@ class Modes:
         # Update the 'processed' field in the consumed collection
         spectral_collection.update_many(query, { "$set": { "processed": True } })
         
-        manager.log.info(f"{len(processed_queries)} documents updated.")
+        manager.log.info(f"Processing mode: Done.")
         pass
 
     def update_dashboard(self):
