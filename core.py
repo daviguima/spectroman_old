@@ -204,12 +204,12 @@ class Spectroman:
             to_replace = ['-99','"-INF"','""','"']
             doc = {key: np.nan if value in to_replace else value for key, value in document.items() }
 
-            r_ed=doc['"CalibData_c1(76)"']
-            r_ld=doc['"CalibData_c2(76)"']
-            r_lu=doc['"CalibData_c4(76)"']
-            ir_ed=doc['"CalibData_c1(136)"']
-            ir_ld=doc['"CalibData_c2(136)"']
-            ir_lu=doc['"CalibData_c4(136)"']
+            r_ed=float(doc['"CalibData_c1(76)"'])
+            r_ld=float(doc['"CalibData_c2(76)"'])
+            r_lu=float(doc['"CalibData_c4(76)"'])
+            ir_ed=float(doc['"CalibData_c1(136)"'])
+            ir_ld=float(doc['"CalibData_c2(136)"'])
+            ir_lu=float(doc['"CalibData_c4(136)"'])
             
             try:
                 # Compute Rrs for RED:650nm
