@@ -21,9 +21,9 @@ class Equations:
         return round(rrs,3)
 
     @staticmethod
-    def css_jirau(IR, RED):
+    def css_jirau(rrs_ir_850, rrs_red_650):
         try:
-            css = [13.294 * math.exp(5.2532 * (rrs850 / rrs650)) for rrs850,rrs650 in zip(IR, RED)]
+            css = 13.294 * math.exp(5.2532 * (rrs_ir_850 / rrs_red_650))
         except Exception as e:
             print(e)
             css = np.nan

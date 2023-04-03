@@ -234,7 +234,7 @@ class Spectroman:
             # Parse the str objects to datetime64
             timestamp = pd.to_datetime(doc['"TIMESTAMP"'], format='"%Y-%m-%d %H:%M:%S"')
 
-            new_entry = {'parent_id': doc['_id'],
+            new_entry = {'_id': doc['_id'],
                          'date': timestamp,
                          'Ed650': r_ed,
                          'Ld650': r_ld,
