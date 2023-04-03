@@ -16,6 +16,10 @@ if __name__ == "__main__":
                         help='Run in processing mode', 
                         action='store_true')
     
+    parser.add_argument('-a', '--atlas',
+                        help='Update MongoDB remote instance', 
+                        action='store_true')
+    
     parser.add_argument('-l', '--local', 
                         help='Run in local download mode', 
                         action='store_true')
@@ -36,5 +40,7 @@ if __name__ == "__main__":
         manager.option.network_mode()
     elif args['process']:
         manager.option.processing_mode()
+    elif args['atlas']:
+        manager.option.update_atlas()
     elif args['local']:
         manager.option.download_mode()

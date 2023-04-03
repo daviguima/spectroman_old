@@ -158,18 +158,52 @@ class Modes:
         manager.log.info(f"Processing mode completed.")
         pass
 
-    def update_dashboard(self):
+    def update_atlas(self):
         """
         SPECTROMAN Update Atlas Dashboard mode:
         Fetch the entries in Collection:MAIN and connects to the Atlas cloud instance
         to replicate the content for both collections in order to feed the dashboard.
         """
-        manager = self.m
-        atlas_collection, client, db = manager.get_mongo_connection(conn_str=manager.config_data['DBCON_ATLAS'],
-                                                        db_name=manager.config_data['DB_ATLAS'],
-                                                        collection=manager.config_data['COLLECTION_ATLAS'])
+        manager = self.m 
+        manager.log.info(f'Atlas collection update mode selected.')
+        # Connect and retrieve files inside collection jirau_df
+        main_collection, _, _ = manager.get_mongo_connection(collection=manager.config_data['COLLECTION_MAIN'])
+        
+        query = { "$or": [ { "on_cloud": False }, { "on_cloud": { "$exists": False } } ] }
+        # Find all documents matching the query and store them in a list
+        manager.log.info(f'Retrieving unprocessed data from Database...')
+        mdb_query_data = list(main_collection.find(query))
+        
+        total = len(mdb_query_data)
+        manager.log.info(f'Done : {total} entries where found.')
 
-        atlas_collection.insert_one({'x': 1})
+        # open connection to Atlas
+        atlas_db_name = manager.config_data['DB_ATLAS']
+        atlas_coll_name = manager.config_data['COLLECTION_ATLAS']
+        atlas_collection, _, _ = manager.get_mongo_connection(conn_str=manager.config_data['DBCON_ATLAS'],
+                                                              db_name=atlas_db_name,
+                                                              collection=atlas_coll_name)
+        
+        manager.log.info(f'Connecting to cloud Atlas DB: {atlas_db_name} using collection: {atlas_coll_name}')
+        # Update each document with a new 'result' field, a 'date' field, and set 'processed' to True
+        for n, document in enumerate(mdb_query_data):
+            try:
+                # Keep track of the entries that are already processed
+                manager.log.info(f'Updating {n+1} / {total} ...')
+                # Copy entry to remote Atlas collection
+                atlas_collection.insert_one(document)
+                # Mark the local entry to avoid reprocessing in the future
+                update = { "$set": { "on_cloud": True } }
+                main_collection.update_one({ "_id": document['_id'] }, update)
+
+            except Exception as e:
+                manager.log.info(f"Exception {e}")
+                manager.log.info(f"Skipping entry {document['_id']}")
+        
+        manager.log.info(f"Atlas update completed.")
+        pass
+
+
 
     def download_mode(self):
         """
