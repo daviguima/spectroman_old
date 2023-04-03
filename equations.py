@@ -13,7 +13,13 @@ class Equations:
 
     @staticmethod
     def css_jirau(rs850, rs650):
-        css = 13.294 * math.exp(5.2532 * (rs850 / rs650))
+        try:
+            css = 13.294 * math.exp(5.2532 * (rs850 / rs650))
+        except Exception as e:
+            print(e)
+            css = np.nan
+        if css < 0:
+            css = np.nan
         return css
 
     @staticmethod
