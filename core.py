@@ -193,7 +193,7 @@ class Spectroman:
 
         return df
     
-    def update_query2rrs(query_list):
+    def update_query2rrs(self, query_list):
         """
         Given a list of query result dictionaries, compute the Rrs over them.
         """
@@ -202,6 +202,10 @@ class Spectroman:
 
         # Drop no-data
         df_entries.replace('-99', np.nan, inplace=True)
+        df_entries.replace('"-INF"', np.nan, inplace=True)
+        df_entries.replace('""', np.nan, inplace=True)
+        df_entries.replace('"', np.nan, inplace=True)
+
 
         # Convert the query data from object to float
         df_float = df_entries[['"CalibData_c1(76)"','"CalibData_c1(136)"','"CalibData_c2(76)"',

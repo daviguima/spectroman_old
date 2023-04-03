@@ -126,8 +126,8 @@ class Modes:
         manager.log.info(f'Connects to MongoDB and apply processing routines over its data.')
 
         # Connect and retrieve files inside collection jirau_df
-        spectral_collection, _, _ = manager.get_mongo_connection(collection='jirau_df_mockup')
-        main_collection, _, _ = manager.get_mongo_connection(collection='jirau_main')
+        spectral_collection, _, _ = manager.get_mongo_connection(collection=manager.config_data['COLLECTION_DF'])
+        main_collection, _, _ = manager.get_mongo_connection(collection=manager.config_data['COLLECTION_MAIN'])
         
         query = { "$or": [ { "processed": False }, { "processed": { "$exists": False } } ] }
 
@@ -143,18 +143,19 @@ class Modes:
 
         # Update each document with a new 'result' field, a 'date' field, and set 'processed' to True
         for n, document in enumerate(processed_queries):
-            # Keep track of the entries that are already processed
-            manager.log.info(f'Updating {n+1} / {total} ...')
-            update = { "$set": { "date": document['date'], "processed": True } }
-            spectral_collection.update_one({ "_id": document['_id'] }, update)
+            try:
+                # Keep track of the entries that are already processed
+                manager.log.info(f'Updating {n+1} / {total} ...')
+                update = { "$set": { "date": document['date'], "processed": True } }
+                spectral_collection.update_one({ "_id": document['_id'] }, update)
 
-            # Add the new fields to collection jirau_main
-            main_collection.insert_one(document)
+                # Add the new fields to collection jirau_main
+                main_collection.insert_one(document)
+            except Exception as e:
+                manager.log.info(f"Exception {e}")
+                manager.log.info(f"Skipping entry {document['_id']}")
         
-        # Update the 'processed' field in the consumed collection
-        spectral_collection.update_many(query, { "$set": { "processed": True } })
-        
-        manager.log.info(f"Processing mode: Done.")
+        manager.log.info(f"Processing mode completed.")
         pass
 
     def update_dashboard(self):
