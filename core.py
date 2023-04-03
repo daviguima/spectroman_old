@@ -222,16 +222,16 @@ class Spectroman:
                                             ld=df_float['"CalibData_c4(136)"'])
 
         # Rename columns to something more meaningful
-        df_float.rename(columns={'"CalibData_c1(76)"':'Ed.650',
-                                '"CalibData_c2(76)"':'Ld.650',
-                                '"CalibData_c4(76)"':'Lu.650',
-                                '"CalibData_c1(136)"':'Ed.850',
-                                '"CalibData_c2(136)"':'Ld.850',
-                                '"CalibData_c4(136)"':'Lu.850'}, inplace=True)
+        df_float.rename(columns={'"CalibData_c1(76)"':'Ed650',
+                                '"CalibData_c2(76)"':'Ld650',
+                                '"CalibData_c4(76)"':'Lu650',
+                                '"CalibData_c1(136)"':'Ed850',
+                                '"CalibData_c2(136)"':'Ld850',
+                                '"CalibData_c4(136)"':'Lu850'}, inplace=True)
 
         # Add the computed Rrs's as new columns
-        df_float['Rrs.650'] = rrs650
-        df_float['Rrs.850'] = rrs850
+        df_float['Rrs650'] = rrs650
+        df_float['Rrs850'] = rrs850
 
         # Copy the ID column of the original query and paste it at the beginning
         df_float.insert(loc=0, column='_id', value=df_entries['_id'])
