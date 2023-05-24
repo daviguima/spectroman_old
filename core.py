@@ -154,7 +154,7 @@ class Spectroman:
                             file_arr = file_arr[1:]
         return file_arr
 
-    def get_station_data_df(self, csv_file):
+    def get_station_data_df(self, csv_file, BytesIO_object=True):
         go_on = True
         try:
             # get only the column names from the file
@@ -166,7 +166,8 @@ class Spectroman:
                                      max_rows=1)
             self.log.info(f'Number of columns founds in file = {len(colnames)}.')
             # Once read the pointer needs to return to the head of the _io.BytesIO object
-            csv_file.seek(0)
+            if BytesIO_object:
+                csv_file.seek(0)
 
         except Exception as e:
             self.log.info(f'Broken file header')
