@@ -29,6 +29,8 @@ class Equations:
             css = np.nan
         if css < 0:
             css = np.nan
+        if css > 2000:
+            css = 2001.99
         return css
 
     @staticmethod
