@@ -24,6 +24,7 @@ class Equations:
     def css_jirau(rrs_ir_850, rrs_red_650):
         try:
             css = 13.294 * math.exp(5.2532 * (rrs_ir_850 / rrs_red_650))
+            css = round(css, 2)  # trimm precision to 2 decimals
         except Exception as e:
             print(e)
             css = np.nan
