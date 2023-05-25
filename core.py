@@ -177,13 +177,25 @@ class Spectroman:
             go_on = False
 
         if go_on:
-            # Try to use the colnames found in the file to capture the file content.
+            # Use colnames found in file to capture file content.
             try:
                 pcd_rows = self.pcd2array(pcd_file=csv_file)
                 self.log.info(f'Number of lines founds in file = {len(pcd_rows)}.')
                 self.log.info(f'Number of columns founds in array = {len(pcd_rows[0])}.')
                 self.log.info(f'Generating pd.DataFrame from array data.')
                 df = pd.DataFrame(pcd_rows, columns=colnames)
+                # Remove double quotes from column names
+                df.columns = df.columns.astype(str).str.replace('"', '')
+                # Remove double quotes from row index names
+                df.index = df.index.astype(str).str.replace('"', '')
+                # Remove double quotes from cell values (if needed)
+                df = df.applymap(lambda x: str(x).replace('"', ''))
+                # Convert columns to numeric if possible
+                df = df.apply(pd.to_numeric, errors='ignore')
+                # Convert float inf values to NaN
+                df = df.replace([np.inf, -np.inf], np.nan)
+                # Convert 'TIMESTAMP' column to datetime
+                df['TIMESTAMP'] = pd.to_datetime(df['TIMESTAMP'], errors='ignore')
 
             except Exception as e:
                 self.log.info(f'ERROR: {e}')
@@ -202,15 +214,15 @@ class Spectroman:
         total = len(query_list)
         for n, document in enumerate(query_list):
             self.log.info(f'Processing {n+1}/{total} ...')
-            to_replace = ['-99','"-INF"','""','"']
+            to_replace = [-99,'-99','"-INF"','-INF','""','"',np.inf,-np.inf,'inf','-inf']
             doc = {key: np.nan if value in to_replace else value for key, value in document.items() }
 
-            r_ed=float(doc['"CalibData_c1(76)"'])
-            r_ld=float(doc['"CalibData_c2(76)"'])
-            r_lu=float(doc['"CalibData_c4(76)"'])
-            ir_ed=float(doc['"CalibData_c1(136)"'])
-            ir_ld=float(doc['"CalibData_c2(136)"'])
-            ir_lu=float(doc['"CalibData_c4(136)"'])
+            r_ed=doc['CalibData_c1(76)']
+            r_ld=doc['CalibData_c2(76)']
+            r_lu=doc['CalibData_c4(76)']
+            ir_ed=doc['CalibData_c1(136)']
+            ir_ld=doc['CalibData_c2(136)']
+            ir_lu=doc['CalibData_c4(136)']
             
             try:
                 # Compute Rrs for RED:650nm
@@ -224,7 +236,7 @@ class Spectroman:
                                                     lu=ir_lu)
                 
                 # Compute SPM
-                css = Equations.css_jirau(rrs850,rrs650)
+                css = Equations.css_jirau(rrs850, rrs650)
 
             except Exception as e:
                 self.log.info(f'Exception: {e}')
@@ -232,11 +244,11 @@ class Spectroman:
                 rrs850 = np.nan
                 css = np.nan
 
-            # Parse the str objects to datetime64
-            timestamp = pd.to_datetime(doc['"TIMESTAMP"'], format='"%Y-%m-%d %H:%M:%S"')
+            # # Parse the str objects to datetime64
+            # timestamp = pd.to_datetime(doc['"TIMESTAMP"'], format='"%Y-%m-%d %H:%M:%S"')
 
             new_entry = {'_id': doc['_id'],
-                         'date': timestamp,
+                         'date': doc['TIMESTAMP'],
                          'Ed650': r_ed,
                          'Ld650': r_ld,
                          'Lu650': r_lu,
@@ -272,7 +284,3 @@ class Spectroman:
         logger.addHandler(fileHandler)
         logger.addHandler(console)
         return logger
-
-    @staticmethod
-    def get_rrs():
-        pass
