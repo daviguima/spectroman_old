@@ -11,15 +11,17 @@ def csv_to_df(file):
     return df
 
 def clean_df(df):
-    df.dropna(inplace=True)
-    return df
-
-def convert_df_dtypes(df):
-    df = df.apply(pd.to_numeric, errors='ignore')
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
     df.dropna(inplace=True)
     return df
 
-def convect_df_datetime(df):
+def convert_dtypes(df):
+    df = df.apply(pd.to_numeric, errors='ignore')
+    return clean_df(df)
+
+def convert_datetime(df):
     df['TIMESTAMP'] = pd.to_datetime(df['TIMESTAMP'], errors='ignore')
     return df
+
+def process_df(df):
+    return convert_datetime(convert_dtypes(clean_df(df)))
