@@ -1,5 +1,7 @@
 from decouple import config
 
+__version__ = '2.0.0'
+
 conf = {
     'FTP_HOST': config('FTP_HOST'),
     'FTP_USER': config('FTP_USER'),
@@ -19,3 +21,10 @@ conf = {
     'LOG_OUTPUT': config('LOG_OUTPUT'),
     'DATA_OUTPUT': config('DATA_OUTPUT')
 }
+
+r_ed = 'CalibData_c1(76)'
+r_ld = 'CalibData_c2(76)'
+r_lu = 'CalibData_c4(76)'
+ir_ed = 'CalibData_c1(136)'
+ir_ld = 'CalibData_c2(136)'
+ir_lu = 'CalibData_c4(136)'
