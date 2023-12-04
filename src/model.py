@@ -1,20 +1,47 @@
 import math
 import numpy as np
 
-def calc_reflectance(ed, lu, ld, rho=0.028):
+from conf import *
+
+def calc_reflectance(ed, ld, lu, rho=0.028):
+    """
+    Compute the reflectance.
+    """
     try:
         ed = float(ed)
-        lu = float(lu)
-        ld = float(ld)
+        lu = float(ld)
+        ld = float(lu)
         rrs = (lu - rho * ld) / ed
     except Exception as e:
-        print(e)
         rrs = np.nan
         return rrs
     return round(rrs,3)
 
-def css_jirau(rrs_ir_850, rrs_red_650):
+def calc_rrs650_reflectance(s):
+    """
+    Wrapper function to be used by pandas.DataFrame.apply.
+    Given a list of values [ed, ld, lu], compute rss650
+    reflectance.
+    """
+    return calc_reflectance(s[r_ed],
+                            s[r_ld],
+                            s[r_lu])
+
+def calc_rrs850_reflectance(s):
+    """
+    Wrapper function to be used by pandas.DataFrame.apply.
+    Given a list of values [ed, ld, lu], compute rss850
+    reflectance.
+    """
+    return calc_reflectance(s[ir_ed],
+                            s[ir_ld],
+                            s[ir_lu])
+
+def css_jirau(s):
+    "Compute css_jirau using a list of values [rrs850, rrs650]."
     try:
+        rrs_ir_850 = s['Rrs850']
+        rrs_red_650 = s['Rrs650']
         css = 13.294 * math.exp(5.2532 * (rrs_ir_850 / rrs_red_650))
         css = round(css, 2)  # trimm precision to 2 decimals
     except Exception as e:
@@ -49,7 +76,9 @@ def castillo(rs510, rs670):
     return cdom412
 
 def find_nearest(array, value):
-    # small trick to find the closest column to the correct one
+    """
+    Small trick to find the closest column to the correct one.
+    """
     array = np.asarray(array)
     index = (np.abs(array - value)).argmin()
     return index
