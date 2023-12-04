@@ -1,5 +1,7 @@
 import ftplib
+from os.path import basename
 from datetime import datetime
+
 from conf import conf
 from log import log
 
@@ -12,14 +14,20 @@ class Ftp:
         self.passwd = passwd or conf['FTP_PASS']
 
     def connect(self):
+        """
+        Connect to the FTP host.
+        """
         self.ftp = ftplib.FTP(host=self.host, timeout=60)
         # ftp login
-        self.ftp.login(user=self.user,
-                       passwd=self.passwd)
+        self.ftp.login(user=self.user, passwd=self.passwd)
         # return void
-        return
+        pass
 
     def files_list(self, path=None, sort_recent=True):
+        """
+        Return a file list from path (default, 'FTP_PATH') from
+        settings.ini.
+        """
         path = path or self.path
         files = []
         # change current directory
@@ -33,19 +41,19 @@ class Ftp:
         return files
 
     def fetch_files(self, path=None):
-        files = self.files_list(path)
+        """
+        Fetch files from FTP path (default, 'FTP_PATH') and save it
+        at 'DATA_OUTPUT' set on settings.ini.
+        """
+        files = self.files_list()
         total = len(files)
         log.info(f'{total} total files found...')
         log.info('Attempting to copy...')
         for i, fname in enumerate(files):
-            f = conf['DATA_OUTPUT'] + os.path.basename(fname)
+            f = conf['DATA_OUTPUT'] + basename(fname)
             print(f'Downloading {i + 1} of {total}: {fname}...')
             print(f'Saving copy at: {f}')
             self.ftp.retrbinary('RETR ' + fname, open(f, 'wb').write)
         # quit ftp and return
         self.ftp.quit()
-        return
-
-# ftp = Ftp()
-# ftp.connect()
-# ftp.fetch_files()
+        pass
