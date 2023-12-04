@@ -1,67 +1,72 @@
 import os
 import sys
 
+import numpy
+import pandas
+import matplotlib
+
 from data import *
 from model import *
 
-# from db import Db
-from log import log
+from db import Db
 from ftp import Ftp
+from log import log
 from conf import conf
 
 class Spectroman:
     def __init__(self):
-        return
-    # self.db = Db()
-    # self.Ftp = Ftp()
-    # self.option = Modes(self)
-
-    def compute_values(self, file):
-        for _, row in process_df(csv_to_df(file)).iterrows():
-            r_ed=row['CalibData_c1(76)']
-            r_ld=row['CalibData_c2(76)']
-            r_lu=row['CalibData_c4(76)']
-            ir_ed=row['CalibData_c1(136)']
-            ir_ld=row['CalibData_c2(136)']
-            ir_lu=row['CalibData_c4(136)']
-
-            try:
-                # Compute Rrs for RED:650nm
-                rrs650 = calc_reflectance(ed=r_ed,
-                                          ld=r_ld,
-                                          lu=r_lu)
-                # Compute Rrs for IR:850nm
-                rrs850 = calc_reflectance(ed=ir_ed,
-                                          ld=ir_ld,
-                                          lu=ir_lu)
-                # Compute SPM
-                css = css_jirau(rrs850, rrs650)
-
-            except Exception as e:
-                log.info(f'Exception: {e}')
-                css = None
-                rrs650 = None
-                rrs850 = None
-
-            print({'date': row['TIMESTAMP'],
-                   'Ed650': r_ed,
-                   'Ld650': r_ld,
-                   'Lu650': r_lu,
-                   'Ed850': ir_ed,
-                   'Ld850': ir_ld,
-                   'Lu850': ir_lu,
-                   'Rrs650': rrs650,
-                   'Rrs850': rrs850,
-                   'css': css})
+        self.db = Db()
+        self.ftp = Ftp()
+        # self.plot = Plot(self.db)
         return
 
-    def process_csv(self, files):
+    def calc_rss(self, df):
         """
-        Given a list of csv files, compute the RRS values over them.
+        Given a data frame, compute the RRS values and
+        return it.
         """
-        total = len(files)
-        for n, f in enumerate(files):
-            log.info(f'Processing {n+1}/{total} ...')
-            self.compute_values(f)
-            log.info(f'Processing completed for: Rrs650, Rrs650 and CSS.')
-        return
+        df['Rrs650'] = df[[r_ed,
+                           r_ld,
+                           r_lu]].apply(calc_rrs650_reflectance, axis=1)
+
+        df['Rrs850'] = df[[ir_ed,
+                           ir_ld,
+                           ir_lu]].apply(calc_rrs850_reflectance, axis=1)
+
+        df['css'] = df[['Rrs850',
+                        'Rrs650']].apply(css_jirau, axis=1)
+        return df
+
+    def process_file(self, file):
+        """
+        Given a csv files, compute the RRS values over them
+        and persist it using the database module.
+        """
+        try:
+            df = csv_to_df(file)
+        except Exception as e:
+            log.info(e)
+        else:
+            if (not df.empty) and len(df) > 1:
+                self.db.insert(df.to_dict('list'), self.db.coll_raw)
+
+            df = process_df(df)
+            if (not df.empty) and len(df) > 1:
+                self.db.insert(self.calc_rss(df).to_dict('list'),
+                               self.db.coll_df)
+        finally:
+            pass
+
+    def process_files(self, files):
+        """
+        Given a list of csv files, compute the RRS values over them
+        and persist it using the database module.
+        """
+        n = len(files)
+        # process each file
+        for i, f in enumerate(files):
+            log.info(f'Processing: {i + 1}/{n}')
+            self.process_file(f)
+            # processing complete
+        log.info(f'Processing Completed: Rrs650, Rrs650 and CSS.')
+        pass
