@@ -2,9 +2,7 @@ version: '3.3'
 
 services:
   mongodb:
-    build:
-      context: .
-      dockerfile: docker/mongodb.dockerfile
+    image: mongo:latest
     volumes:
       - /data/db
     ports:
@@ -12,7 +10,8 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=user
       - MONGO_INITDB_ROOT_PASSWORD=pass
-    entrypoint: ["mongod", "--bind_ip", "0.0.0.0"]
+      - MONGO_INITDB_DATABASE=spectro_cluster_tenorio
+    # entrypoint: ["mongod", "--bind_ip", "0.0.0.0"]
     restart: always
 
   spectroman:
