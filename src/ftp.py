@@ -1,5 +1,5 @@
 import ftplib
-from os.path import basename
+from os.path import basename, exists
 from datetime import datetime
 
 from conf import conf
@@ -51,9 +51,11 @@ class Ftp:
         log.info('Attempting to copy...')
         for i, fname in enumerate(files):
             f = conf['DATA_OUTPUT'] + basename(fname)
-            print(f'Downloading {i + 1} of {total}: {fname}...')
-            print(f'Saving copy at: {f}')
-            self.ftp.retrbinary('RETR ' + fname, open(f, 'wb').write)
-        # quit ftp and return
+            if not exists(f):
+                print(f'Downloading {i + 1} of {total}: {fname}...')
+                print(f'Saving copy at: {f}')
+                self.ftp.retrbinary('RETR ' + fname, open(f, 'wb').write)
+            else:
+                print(f'File already cached: {f}')
         self.ftp.quit()
         pass
