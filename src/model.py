@@ -8,34 +8,21 @@ def calc_reflectance(ed, ld, lu, rho=0.028):
     Compute the reflectance.
     """
     try:
-        ed = float(ed)
-        lu = float(ld)
-        ld = float(lu)
         rrs = (lu - rho * ld) / ed
     except Exception as e:
         rrs = np.nan
         return rrs
-    return round(rrs,3)
+    return rrs
 
-def calc_rrs650_reflectance(s):
+def calc_rrs_reflectance(lst):
     """
     Wrapper function to be used by pandas.DataFrame.apply.
-    Given a list of values [ed, ld, lu], compute rss650
+    Given a list of values [ed, ld, lu], compute rss
     reflectance.
     """
-    return calc_reflectance(s[r_ed],
-                            s[r_ld],
-                            s[r_lu])
-
-def calc_rrs850_reflectance(s):
-    """
-    Wrapper function to be used by pandas.DataFrame.apply.
-    Given a list of values [ed, ld, lu], compute rss850
-    reflectance.
-    """
-    return calc_reflectance(s[ir_ed],
-                            s[ir_ld],
-                            s[ir_lu])
+    arr = np.array(np.array_split(np.array(lst), 3))
+    return np.apply_along_axis(
+        lambda x: calc_reflectance(x[0], x[1], x[2]), 0, arr).round(3)
 
 def css_jirau(s):
     "Compute css_jirau using a list of values [rrs850, rrs650]."
