@@ -1,27 +1,75 @@
+import warnings
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
+
+def get_wl_dat(fname):
+    """
+    Return np.ndarray with wl_dat data.
+    """
+    fname = 'wl_dat/' + fname
+    return np.genfromtxt(fname,
+                         delimiter = '  ',
+                         skip_header = 30,
+                         skip_footer = 60,
+                         dtype = 'float64',
+                         invalid_raise = False,
+                         usecols = 1)
+
+def wl_dat_5():
+    return np.round(301.122 + 3.32329 *
+                    np.arange(1,256) +
+                    0.000352334 *
+                    np.arange(1,256)**2 -
+                    1.81627e-06 *
+                    np.arange(1,256)**3,2)[29:195]
+
+def np_read_from_csv(f):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        arr = np.genfromtxt(f,
+                            delimiter = ',',
+                            skip_header = 1,
+                            dtype = 'str',
+                            invalid_raise=False)
+        if (arr.ndim == 1):
+            arr = np.array([], dtype = 'str')
+        else:
+            arr = arr[1:]
+            if (len(arr) > 0):
+                if (arr[0][0] == '\"TS\"' or arr[0][0] == 'TS' or arr[0][0] == '\"\"' or arr[0][0] == ''):
+                    arr = arr[1:]
+                    if (len(arr) > 0):
+                        if (arr[0][0] == '\"\"' or arr[0][0] == ''):
+                            arr = arr[1:]
+        return arr
 
 def csv_to_df(csv):
     """
     Read csv file and parse it to pandas data frame.
     """
-    with open(csv, encoding="utf-8") as f:
-        df = pd.read_csv(f,
-                         sep=',',
-                         skiprows=1,
-                         on_bad_lines='error',
-                         na_values=[-99, '',
-                                    '-INF', 'INF',
-                                    '-inf', 'inf'
-                                    'Smp', 'TS'],
-                         keep_default_na=True)
-    return df
+    return pd.read_csv(csv,
+                       sep=',',
+                       skiprows=1,
+                       skip_blank_lines=True,
+                       on_bad_lines='error',
+                       # dtype=dtype_dict,
+                       # memory_map=True,
+                       low_memory=False,
+                       engine='c',
+                       na_values=[-99, '', ' ',
+                                  '-INF', 'INF',
+                                  '-inf', 'inf',
+                                  'Smp', 'TS', 'RN'],
+                       keep_default_na=True)
 
 def clean_df(df):
     """
     Remove NA values from the data frame (df).
     """
-    df.dropna(axis=0, how='any', inplace=True)
+    # df = df.drop_duplicates(keep='first')
+    df = df.dropna(axis=0, how='any')
     return df
 
 def convert_dtypes(df):
