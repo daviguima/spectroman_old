@@ -1,6 +1,5 @@
 from decouple import config
 
-__version__ = '2.0.0'
 
 conf = {
     'FTP_HOST': config('FTP_HOST'),

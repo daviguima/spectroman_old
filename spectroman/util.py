@@ -8,7 +8,7 @@ import numpy as np
 from scipy.interpolate import griddata
 
 # internal modules
-from conf import conf
+from spectroman.conf import conf
 
 def list_csvs(path=None):
     """

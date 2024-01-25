@@ -1,12 +1,14 @@
 import argparse
 import importlib
+import spectroman
 
-from core import Spectroman
-from ftp import Ftp
+from spectroman.core import Spectroman
+from spectroman.ftp import Ftp
 
-from log import log
-from conf import conf
-from util import list_csvs
+from spectroman.log import log
+from spectroman.conf import conf
+from spectroman.util import list_csvs
+
 
 def process_csvs():
     """
@@ -48,7 +50,7 @@ if __name__ == "__main__":
     args = parser.parse_args().__dict__
 
     if args['version']:
-        log.info(f'SPECTROMAN version: {__version__}')
+        log.info(f'SPECTROMAN version: {spectroman.__version__}')
     elif args['process']:
         process_csvs()
     elif args['local']:

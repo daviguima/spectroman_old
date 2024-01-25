@@ -1,4 +1,6 @@
+scipy
 numpy
 pandas
 pymongo
+matplotlib
 python-decouple

@@ -2,8 +2,8 @@ import ftplib
 from os.path import basename, exists
 from datetime import datetime
 
-from conf import conf
-from log import log
+from spectroman.conf import conf
+from spectroman.log import log
 
 class Ftp:
     def __init__(self, host=None, path=None, user=None, passwd=None):

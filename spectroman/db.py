@@ -1,7 +1,7 @@
 import pymongo
 
-from log import log
-from conf import conf
+from spectroman.log import log
+from spectroman.conf import conf
 
 class Db:
     def __init__(self, uri=None, name=None):

@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from conf import *
+from spectroman.conf import *
 
 def calc_reflectance(ed, ld, lu, rho=0.028):
     """

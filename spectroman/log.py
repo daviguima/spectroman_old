@@ -2,7 +2,7 @@ import os
 import logging
 
 from datetime import datetime
-from conf import conf
+from spectroman.conf import conf
 
 class Log():
     def __init__(self, fname):

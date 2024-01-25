@@ -1,8 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from log import log
-from const import *
+from spectroman.log import log
+# from const import *
 
 class Plot:
     def __init__(self):

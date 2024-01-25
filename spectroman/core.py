@@ -1,15 +1,15 @@
 import time
 from os.path import basename
 
-from util import *
-from data import *
-from const import *
-from model import *
+from spectroman.util import *
+from spectroman.data import *
+# from const import *
+from spectroman.model import *
 
-from db import Db
-from ftp import Ftp
-from log import log
-from plot import Plot
+from spectroman.db import Db
+from spectroman.ftp import Ftp
+from spectroman.log import log
+from spectroman.plot import Plot
 
 class Spectroman:
     def __init__(self):
