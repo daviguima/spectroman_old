@@ -64,6 +64,9 @@ def csv_to_df(csv):
                                   'Smp', 'TS', 'RN'],
                        keep_default_na=True)
 
+def dict_to_df(data):
+    return pd.DataFrame(data=data, columns=data.keys(), index=[0])
+
 def clean_df(df):
     """
     Remove NA values from the data frame (df).

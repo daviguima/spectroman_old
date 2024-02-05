@@ -1,5 +1,6 @@
 import time
 from os.path import basename
+from datetime import datetime, time, timedelta
 
 from util import *
 from data import *
@@ -31,7 +32,6 @@ class Spectroman:
             log.info(e)
             pass
         else:
-            # df = pd.concat([df, df_intp], axis=1)
             df = df.join(df_out, how='left')
         finally:
             return df
@@ -51,15 +51,9 @@ class Spectroman:
             log.info(e)
             pass
         else:
-            # df = pd.concat([df, df_rss], axis=1)
             df = df.join(df_out, how='left')
         finally:
             return df
-
-    def insert_df(self, df, coll):
-        if (df != None) and (not df.empty) and len(df) > 1:
-            self.db.insert(df.to_dict('list'), coll)
-        pass
 
     def read_csv(self, csv):
         df = pd.DataFrame()
@@ -72,8 +66,7 @@ class Spectroman:
 
     def process_df(self, df):
         """
-        Given a csv files, compute the interpolation and RRS values over them
-        and persist it using the database module.
+        Given a csv files, compute the interpolation and RRS values.
         """
         df = process_df(df)
         bk = df
@@ -86,11 +79,181 @@ class Spectroman:
                                       intp_data)
 
             # compute the rss values from the interpolated parameters
-            for input_cols, output_cols in rss_table:
+            for input_cols, output_cols in rss_param_table:
                 df = self.calc_rss(df, input_cols, output_cols)
         else:
             df = pd.DataFrame()
         return df
+
+    def insert_docs(self, path):
+        """
+        Process and cache the data-frames into the data base.
+        """
+        files = list_csvs(path)
+        for f in [file_to_str_io(f) for f in files]:
+            df = self.read_csv(f)
+            if (not df.empty) and len(df) > 1:
+                self.db.insert_docs(df.to_dict('records'), conf['DB_COLL_RAW'])
+        pass
+
+    def clean_docs(self):
+        """
+        Clear NaN values from the raw data there is located at
+        conf['DB_COLL_RAW'].
+        """
+        for doc in self.db.fetch_docs(noteq_filter(), {}, conf['DB_COLL_RAW']):
+            # convert timestamp string to ISODate
+            try:
+                doc['TIMESTAMP'] =\
+                    datetime.strptime(doc['TIMESTAMP'], "%Y-%m-%d %H:%M:%S")
+            except:
+                pass
+            else:
+                self.db.insert_docs(doc, conf['DB_COLL_DF'])
+            finally:
+                pass
+
+    def process_intp(self):
+        """
+        """
+        for doc in self.db.fetch_docs({}, {}, conf['DB_COLL_DF']):
+            # cache the id
+            id = doc['_id']
+            # remove id from the dictionary
+            doc.pop('_id', None)
+            # parse dict to data frame
+            df = dict_to_df(doc)
+            # calculate the interpolation
+            for input_cols, output_cols, wl_data in intp_table:
+                df = self.interpolate(df,
+                                      input_cols,
+                                      output_cols,
+                                      wl_data)
+
+            # compute the rss values from the interpolated parameters
+            for input_cols, output_cols in rss_param_table:
+                df = self.calc_rss(df, input_cols, output_cols)
+                # get values from the data frame
+            try:
+                values = df.loc[:,\
+                                ed_cols +
+                                ld1_cols +
+                                ld2_cols +
+                                lu1_cols +
+                                lu2_cols +
+                                rss1_cols +
+                                rss2_cols].to_dict('records')[0]
+            except Exception as e:
+                log.info(f"Exception {e}")
+            else:
+                # update the document with the new record values
+                self.db.update_doc({"_id": id},
+                                   {"$set": values},
+                                   conf['DB_COLL_DF'])
+            finally:
+                pass
+        pass
+
+    def process_css(self):
+        """
+        """
+        for doc in self.db.fetch_docs({}, {}, conf['DB_COLL_DF']):
+            values = {}
+            try:
+                values['css1'] = css_jirau(doc['rss1_650'], doc['rss1_850'])
+                values['css2'] = css_jirau(doc['rss2_650'], doc['rss2_850'])
+            except Exception as e:
+                log.info(f"Exception {e}")
+            else:
+                # update the document with the new record values
+                self.db.update_doc({"_id": doc['_id']},
+                                   {"$set": values},
+                                   conf['DB_COLL_DF'])
+            finally:
+                pass
+
+    def get_dates(self):
+        dates = []
+        index = 0
+        # get time stamp
+        cursor = self.db.fetch_docs({},
+                                    {'TIMESTAMP': 1, '_id': 0},
+                                    conf['DB_COLL_DF']).sort({'TIMESTAMP': 1})
+        # append first date
+        dates.append(cursor[0]['TIMESTAMP'].date())
+        for doc in cursor[1:]:
+            # append just unique dates
+            if (dates[index] != doc['TIMESTAMP'].date()):
+                dates.append(doc['TIMESTAMP'].date())
+                index = index + 1
+            pass
+        return dates
+
+    def plot_base_graph(self):
+        """
+        """
+        for date in self.get_dates():
+            beg = datetime.combine(date, time(6, 0, 0))
+            end = datetime.combine(date, time(18, 15, 0))
+            while beg < end:
+                dts  = beg.strftime("%Y-%m-%d-%H-%M-%S")
+                tmp  = beg + timedelta(minutes=15)
+                docs = []
+                for doc in self.db.fetch_docs({'TIMESTAMP': {'$gte': beg,
+                                                             '$lt': tmp}},
+                                              get_intp_selection(),
+                                              conf['DB_COLL_DF']):
+                    docs.append(doc)
+                    pass
+                if (len(docs) >= 1):
+                    self.plot.basic_graph(dts, docs)
+                    # update beg
+                beg = tmp
+            pass
+        pass
+
+    def plot_daily_graph(self):
+        """
+        """
+        for date in self.get_dates()[:2]:
+            beg = datetime.combine(date, time(6, 0, 0))
+            end = datetime.combine(date, time(18, 0, 0))
+            docs = []
+            for doc in self.db.fetch_docs({'TIMESTAMP': {'$gte': beg,
+                                                         '$lte': end}},
+                                          get_daily_selection(),
+                                          conf['DB_COLL_DF']).\
+                                          sort({'TIMESTAMP': 1}):
+                docs.append(doc)
+            if (len(docs) >= 1):
+                times = [doc['TIMESTAMP'] for doc in docs]
+                self.plot.daily_graph(beg, end, date, times, docs)
+        pass
+
+    def plot_monthly_graph(self):
+        """
+        """
+        years  = [2023, 2024]
+        months = [i for i in range(1, 13)]
+        dates = []
+
+        for year in years:
+            for month in months:
+                dates.append(month_date_pair(year, month))
+            pass
+        pass
+
+        for beg, end in dates:
+            docs = []
+            for doc in self.db.fetch_docs({'TIMESTAMP': {'$gte': beg,
+                                                         '$lte': end}},
+                                          get_css_selection(),
+                                          conf['DB_COLL_DF']):
+                docs.append(doc)
+            if (len(docs) >= 1):
+                times = [doc['TIMESTAMP'] for doc in docs]
+                self.plot.monthly_css(beg, end, times, docs)
+        pass
 
     def process_files(self, files):
         """
@@ -102,6 +265,7 @@ class Spectroman:
         gs = {}
 
         time_start  = time.perf_counter()
+
         for f in files:
             ts = basename(f).split('_')[0]
             gs.setdefault(ts, []).append(file_to_str_io(f))
@@ -118,18 +282,29 @@ class Spectroman:
                                    ignore_index=True,
                                    sort=False,
                                    copy=False)
-                pass
-            # generate the rss of the day
+            pass
+        # generate the rss of the day
             if not df.empty and len(df) > 1:
                 self.plot.gen_fig(df)
                 # update counter
             i = i + 1
         pass
+        # move files
+        move_csvs(files)
         # record end time
         time_end = time.perf_counter()
         # calculate the duration
         time_duration = time_end - time_start
         # report the duration
         print(f'Took {time_duration:.3f} seconds')
-
         pass
+
+s = Spectroman()
+s.plot_monthly_graph()
+
+# s.plot_daily_graph()
+# s.insert_docs(conf['DATA_BACKUP']) (cache, flag or number of columns)
+# s.clean_docs()   -> (force=False)
+# s.remove_docs()  ->
+# s.process_intp() -> interp, rss, css (cache, flag or number of columns)
+# s.process_css()

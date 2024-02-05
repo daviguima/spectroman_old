@@ -13,8 +13,8 @@ def process_csvs():
     Process the previous fetched csvs.
     """
     s = Spectroman()
-    s.db.connect()
     s.process_files(list_csvs())
+    # s.db.connect()
     pass
 
 def fetch_csvs():

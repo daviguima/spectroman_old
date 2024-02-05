@@ -31,14 +31,58 @@ class Db:
     def get_coll_main(self):
         return self.get_coll(self.coll_main)
 
-    def insert(self, data, coll):
+    def insert_doc(self, doc, coll):
         try:
-            self.get_coll(coll).insert_one(data).inserted_id
+            self.connect()
+            self.get_coll(coll).insert_one(doc)
         except Exception as e:
             log.info(f"Exception {e}")
-        finally:
+        else:
             log.info(f"Document inserted on the collection {coll}")
+        finally:
             pass
 
-    def fetch(self, query, coll):
-        return self.get_coll(coll).find(query)
+    def insert_docs(self, docs, coll):
+        try:
+            self.connect()
+            self.get_coll(coll).insert_many(docs)
+        except Exception as e:
+            log.info(f"Exception {e}")
+        else:
+            log.info(f"Document inserted on the collection {coll}")
+        finally:
+            pass
+
+    def update_doc(self, filter, values, coll):
+        try:
+            self.connect()
+            self.get_coll(coll).update_one(filter, values)
+        except Exception as e:
+            log.info(f"Exception {e}")
+        else:
+            log.info(f"Document updated on the collection {coll}")
+        finally:
+            pass
+
+    def fetch_docs(self, filter, projection, coll):
+        cursor = None
+        try:
+            self.connect()
+            cursor = self.get_coll(coll).find(filter, projection)
+        except Exception as e:
+            log.info(f"Exception {e}")
+        else:
+            pass
+        finally:
+            return cursor
+
+    def remove_doc(self, filter, collation, column):
+        try:
+            self.connect()
+            self.get_coll(column).delete_one(filter, collation)
+        except Exception as e:
+            log.info(f"Exception {e}")
+        else:
+            pass
+        finally:
+            pass
