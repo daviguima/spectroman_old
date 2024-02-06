@@ -63,5 +63,3 @@ class Ftp:
 
     def update_files(self, path=None):
         pass
-
-

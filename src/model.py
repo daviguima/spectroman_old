@@ -71,13 +71,3 @@ def find_nearest(array, value):
     array = np.asarray(array)
     index = (np.abs(array - value)).argmin()
     return index
-
-
-
-
-
-
-
-
-
-
