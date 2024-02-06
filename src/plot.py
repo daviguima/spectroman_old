@@ -12,12 +12,23 @@ class Plot:
 
     def plot_values(self, axs, title, x, y, fmt=""):
         """
+        Plot x, y values and set title using the specific axes (axs).
         """
         axs.set_title(title)
         axs.plot(x, y, fmt)
 
+    def save_fig(self, fig, fname):
+        """
+        Save figure using the figure object and its file name.
+        """
+        fig.savefig(fname, dpi=200)
+        log.info(f'{fname} saved')
+        plt.close()
+        pass
+
     def base_graph(self, dts, docs):
         """
+        Plot the base graph (15 in 15 minutes) from the selected documents.
         """
         fig = plt.figure(figsize=(7, 7), layout='constrained')
         axs = fig.subplot_mosaic([['ed', 'ed'],
@@ -30,37 +41,37 @@ class Plot:
                                  title + dts,
                                  intp_arr,
                                  [doc[k] for k in cols])
-                pass
+                self.save_fig(fig, 'plots/' + dts)
         pass
-
-        figname = 'plots/' + dts
-        # save the figure
-        fig.savefig(figname, dpi=200)
-        # the figure was saved
-        log.info(f'{figname} saved')
-        # close the plot
-        plt.close()
 
     def daily_graph(self, beg, end, date, times, docs):
         """
+        Plot the daily graph from the selected documents.
         """
         fig, axs = plt.subplots(6, 3, figsize=(40, 32))
         axs = axs.flat
         xfmt = pltdates.DateFormatter('%H:%M')
-
         for i, title in enumerate(daily_graph_dict.keys()):
-            for key in daily_graph_dict[title]:
+
+            # set y limit (if any)
+            if (daily_graph_dict[title]['ylim'][1] != None and
+                daily_graph_dict[title]['ylim'][0] != None):
+                axs[i].set_ylim(top=daily_graph_dict[title]['ylim'][1],
+                                bottom=daily_graph_dict[title]['ylim'][0])
+
+            # set grid and x label format
+            axs[i].grid(color='gray', linestyle='--')
+            axs[i].xaxis.set_major_formatter(xfmt)
+
+            # plot values using the right columns
+            for key in daily_graph_dict[title]['cols']:
                 self.plot_values(axs[i],
                                  title,
                                  times,
                                  [d[key] for d in docs],
                                  fmt='o-.')
-                axs[i].grid(color='gray', linestyle='--')
-                axs[i].xaxis.set_major_formatter(xfmt)
-                # axs[i].set_xlim(left=beg, right=end)
-            pass
-        pass
 
+        # adjust the subplots
         plt.subplots_adjust(left=0.05,
                             bottom=0.05,
                             right=0.95,
@@ -72,17 +83,13 @@ class Plot:
         # remove axs
         fig.delaxes(axs[16])
         fig.delaxes(axs[17])
-        # figure name
-        figname = 'plots/' + 'daily_' + date.strftime("%Y-%m-%d")
-        # save the figure
-        fig.savefig(figname, dpi=200)
-        # the figure was saved
-        log.info(f'{figname} saved')
-        # close the plot
-        plt.close()
+        # save figure
+        self.save_fig(fig, 'plots/' + 'daily_' + date.strftime("%Y-%m-%d"))
+        pass
 
     def monthly_css(self, beg, end, times, docs):
         """
+        Plot the month graph (css) from the selected documents.
         """
         fig, axs = plt.subplots(1, 1, figsize=(40, 32))
         keys = monthly_graph_dict['keys']
@@ -96,8 +103,8 @@ class Plot:
             axs.stem(times,
                      [d[key] for d in docs],
                      linefmt = "-",
-                     basefmt = 'C2-',
-                     bottom = 0)
+                     basefmt = 'C1-',
+                     bottom=2000)
             pass
 
         date = beg.strftime("%m/%Y")
@@ -109,24 +116,20 @@ class Plot:
                             top=0.9,
                             wspace=0.2,
                             hspace=0.2)
-        # figure name
-        figname = 'plots/' + 'sss_' + beg.strftime("%Y-%m")
         # save the figure
-        fig.savefig(figname, dpi=200)
-        # the figure was saved
-        log.info(f'{figname} saved')
-        # close the plot
-        plt.close()
+        self.save_fig(fig, 'plots/' + 'sss_' + beg.strftime("%Y-%m"))
         pass
 
-    def gen_plot(self, lst, axs, title, dt):
+    def plot_lst_values(self, lst, axs, title, dt):
         """
+        Plot the x, y values and set title using the specific axes (axs).
         """
         axs.set_title(title + dt)
         axs.plot(intp_arr, lst)
 
-    def gen_fig(self, df):
+    def base_graph_from_df(self, df):
         """
+        Plot base graph using the data frame (df) values.
         """
         day = df['TIMESTAMP'].iloc[0].strftime("%Y-%m-%d")
         beg = day + " 06:00:00"
@@ -147,24 +150,21 @@ class Plot:
             end = t.iloc[-1]
             fig = plt.figure(figsize=(7, 7),
                              layout='constrained')
+
             axs = fig.subplot_mosaic([['ed', 'ed'],
                                       ["lu1", "lu2"],
                                       ["ld1", "ld2"],
                                       ["rss1", "rss2"]])
 
             datetime = pd.to_datetime(str(beg)).strftime("%Y-%m-%d-%H-%M-%S")
-            figname = 'plots/' + datetime
 
             for key, title, cols in plot_table:
                 df[(df['TIMESTAMP'] >= beg) &
                    (df['TIMESTAMP'] <= end)][cols].\
-                   apply(self.gen_plot,
+                   apply(self.plot_lst_values,
                          args=(axs[key], title, datetime),
                          raw=True,
                          axis=1)
                 # save the figure
-            fig.savefig(figname, dpi=200)
-            # the figure was saved
-            log.info(f'{figname} saved')
-            # close the plot
-            plt.close()
+            self.save_fig(fig, 'plots/' + datetime)
+            pass
