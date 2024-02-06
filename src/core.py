@@ -215,7 +215,7 @@ class Spectroman:
     def plot_daily_graph(self):
         """
         """
-        for date in self.get_dates()[:2]:
+        for date in self.get_dates():
             beg = datetime.combine(date, time(6, 0, 0))
             end = datetime.combine(date, time(18, 0, 0))
             docs = []
@@ -298,13 +298,3 @@ class Spectroman:
         # report the duration
         print(f'Took {time_duration:.3f} seconds')
         pass
-
-s = Spectroman()
-s.plot_monthly_graph()
-
-# s.plot_daily_graph()
-# s.insert_docs(conf['DATA_BACKUP']) (cache, flag or number of columns)
-# s.clean_docs()   -> (force=False)
-# s.remove_docs()  ->
-# s.process_intp() -> interp, rss, css (cache, flag or number of columns)
-# s.process_css()
