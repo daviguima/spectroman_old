@@ -51,7 +51,7 @@ class Ftp:
         log.info('Attempting to copy...')
         for i, f in enumerate(files):
             if not exists(join(conf['DATA_BACKUP'], f)):
-                print(f'Downloading {i + 1} of {total}: {fname}...')
+                print(f'Downloading {i + 1} of {total}: {f}...')
                 print(f'Saving copy at: {f}')
                 self.ftp.retrbinary('RETR ' + f,
                                     open(join(conf['DATA_OUTPUT'], f), 'wb').write)
