@@ -89,8 +89,9 @@ class Plot:
         xfmt = pltdates.DateFormatter('%d/%m')
         axs.xaxis.set_major_formatter(xfmt)
         axs.grid(color='gray', linestyle='--')
-        axs.set_ylim(top=500)
-
+        axs.set_ylim(top=2000)
+        plt.xticks(fontsize=30)
+        plt.yticks(fontsize=30)
         for key in keys[:1]:
             axs.stem(times,
                      [d[key] for d in docs],
@@ -99,7 +100,9 @@ class Plot:
                      bottom = 0)
             pass
 
-        plt.rcParams.update({'font.size': 22})
+        date = beg.strftime("%m/%Y")
+        endl = '\n'
+        plt.suptitle(f'{date}{endl}sss mg/L', fontsize=50, y=0.96)
         plt.subplots_adjust(left=0.05,
                             bottom=0.05,
                             right=0.95,
