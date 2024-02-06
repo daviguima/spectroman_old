@@ -38,25 +38,9 @@ def calc_rrs_reflectance(lst):
     return np.apply_along_axis(
         lambda x: calc_reflectance(x[0], x[1], x[2]), 0, arr)
 
-# THIS ONE!
-# 2 new columns on the document for whole collection: jirau_df
-# for each document generate the new columns
-# update the document
-# plot css1 and css2 (datetime-a, datetime-b)
-
 def css_jirau(rrs_650, rrs_850):
     "Compute css_jirau using a list of values [rrs850, rrs650]."
-    try:
-        css = 13.294 * math.exp(5.2532 * (rrs_850 / rrs_650))
-    except Exception as e:
-        css = np.nan
-    else:
-        if css < 0:
-            css = np.nan
-        if css > 2000:
-            css = 2001.99
-    finally:
-        return css
+    return 13.294 * np.exp((rrs_850 / rrs_650) * 5.2532)
 
 def chla_gitelson(rs665, rs715, rs750):
     # Gitelson 2008
