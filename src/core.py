@@ -20,6 +20,9 @@ class Spectroman:
         pass
 
     def interpolate(self, df, input_cols, output_cols, intp_data):
+        """
+        Calculate the linear interpolation.
+        """
         # calculate the interpolation for param: [c1, c2, c3, c4, c4]
         try:
             df_out = df[input_cols].apply(linear_intp,
@@ -56,6 +59,9 @@ class Spectroman:
             return df
 
     def read_csv(self, csv):
+        """
+        Parse csv file its data frame representation.
+        """
         df = pd.DataFrame()
         try:
             df = csv_to_df(csv)
@@ -101,7 +107,9 @@ class Spectroman:
         Clear NaN values from the raw data there is located at
         conf['DB_COLL_RAW'].
         """
-        for doc in self.db.fetch_docs(noteq_filter(), {}, conf['DB_COLL_RAW']):
+        for doc in self.db.fetch_docs(noteq_filter(calib_cols),
+                                      {},
+                                      conf['DB_COLL_RAW']):
             # convert timestamp string to ISODate
             try:
                 doc['TIMESTAMP'] =\
@@ -115,6 +123,7 @@ class Spectroman:
 
     def process_intp(self):
         """
+        Process the linear interpolation for the database data.
         """
         for doc in self.db.fetch_docs({}, {}, conf['DB_COLL_DF']):
             # cache the id
@@ -156,6 +165,7 @@ class Spectroman:
 
     def process_css(self):
         """
+        Calculate the css values for the database data.
         """
         for doc in self.db.fetch_docs({}, {}, conf['DB_COLL_DF']):
             values = {}
@@ -173,6 +183,9 @@ class Spectroman:
                 pass
 
     def get_dates(self):
+        """
+        Return the list of sorted dates from the database.
+        """
         dates = []
         index = 0
         # get time stamp
@@ -191,6 +204,7 @@ class Spectroman:
 
     def plot_base_graph(self):
         """
+        Plot the base graph (15 to 15 minutes), using the database values.
         """
         for date in self.get_dates():
             beg = datetime.combine(date, time(6, 0, 0))
@@ -214,6 +228,7 @@ class Spectroman:
 
     def plot_daily_graph(self):
         """
+        Plot the daily graph using the database values.
         """
         for date in self.get_dates():
             beg = datetime.combine(date, time(6, 0, 0))
@@ -232,11 +247,13 @@ class Spectroman:
 
     def plot_monthly_graph(self):
         """
+        Get the docs from the database and plot the SSS graph.
         """
         years  = [2023, 2024]
         months = [i for i in range(1, 13)]
         dates = []
 
+        # generate months of the year
         for year in years:
             for month in months:
                 dates.append(month_date_pair(year, month))
@@ -269,7 +286,7 @@ class Spectroman:
         for f in files:
             ts = basename(f).split('_')[0]
             gs.setdefault(ts, []).append(file_to_str_io(f))
-
+            a
         i = 0
         for k in list(gs):
             log.info(f'Processing: {k}: {i + 1}/{len(gs)}')
@@ -283,9 +300,9 @@ class Spectroman:
                                    sort=False,
                                    copy=False)
             pass
-        # generate the rss of the day
+            # generate the rss of the day
             if not df.empty and len(df) > 1:
-                self.plot.gen_fig(df)
+                self.plot.base_graph_from_df(df)
                 # update counter
             i = i + 1
         pass
@@ -298,3 +315,12 @@ class Spectroman:
         # report the duration
         print(f'Took {time_duration:.3f} seconds')
         pass
+
+s = Spectroman()
+# s.plot_monthly_graph()
+# s.process_css()
+# s.insert_docs(conf['DATA_BACKUP'])
+# s.clean_docs()
+# s.process_intp()
+# s.plot_base_graph()
+s.plot_daily_graph()
