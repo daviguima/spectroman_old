@@ -315,12 +315,3 @@ class Spectroman:
         # report the duration
         print(f'Took {time_duration:.3f} seconds')
         pass
-
-s = Spectroman()
-# s.plot_monthly_graph()
-# s.process_css()
-# s.insert_docs(conf['DATA_BACKUP'])
-# s.clean_docs()
-# s.process_intp()
-# s.plot_base_graph()
-s.plot_daily_graph()
