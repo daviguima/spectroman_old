@@ -3,7 +3,18 @@ import numpy as np
 
 # internal modules
 from data import get_wl_dat, wl_dat_5
-from util import gen_columns, gen_calib_cols
+
+def gen_columns(param, beg, end):
+    """
+    Generate columns list.
+    """
+    return [param + str(i) for i in range(beg, end)]
+
+def gen_calib_cols(param):
+    """
+    Generate CalibData columns list.
+    """
+    return ['CalibData_' + param + '(' + str(i) + ')' for i in range(1, 167)]
 
 # parameters columns
 ed_cols   = gen_columns('ed_',   410, 941)
@@ -95,49 +106,54 @@ daily_columns = ['Batt',
                  'css2']
 
 daily_graph_dict = {
-    'Batt  V': ['Batt'],
-    'Temp °C': ['Temp_Box'],
-    'Piranômetro W/m²': ['Tens_Pira'],
-    'Ed 450': ['ed_450'],
-    'Ed 650': ['ed_650'],
-    'Ed 850': ['ed_850'],
-    'Ld 450': ['ld1_450', 'ld2_450'],
-    'Ld 650': ['ld1_650', 'ld2_650'],
-    'Ld 850': ['ld1_850', 'ld2_850'],
-    'Lu 450': ['lu1_450', 'lu2_450'],
-    'Lu 650': ['lu1_650', 'lu2_650'],
-    'Lu 850': ['lu1_850', 'lu2_850'],
-    'Rss 450': ['rss1_450', 'rss2_450'],
-    'Rss 650': ['rss1_650', 'rss2_650'],
-    'Rss 850': ['rss1_850', 'rss2_850'],
-    'Sss': ['css1', 'css2']}
+    'Batt  V': {'cols': ['Batt'],
+                'xlim': [None, None],
+                'ylim': [None, None]},
+    'Temp °C': {'cols': ['Temp_Box'],
+                'xlim': [None, None],
+                'ylim': [None, None]},
+    'Piranômetro W/m²': {'cols': ['Tens_Pira'],
+                         'xlim': [None, None],
+                         'ylim': [None, None]},
+    'Ed 450': {'cols': ['ed_450'],
+               'xlim': [None, None],
+               'ylim': [None, None]},
+    'Ed 650': {'cols': ['ed_650'],
+               'xlim': [None, None],
+               'ylim': [None, None]},
+    'Ed 850': {'cols': ['ed_850'],
+               'xlim': [None, None],
+               'ylim': [None, None]},
+    'Ld 450': {'cols': ['ld1_450', 'ld2_450'],
+               'xlim': [None, None],
+               'ylim': [None, None]},
+    'Ld 650': {'cols': ['ld1_650', 'ld2_650'],
+               'xlim': [None, None],
+               'ylim': [None, None]},
+    'Ld 850': {'cols': ['ld1_850', 'ld2_850'],
+               'xlim': [None, None],
+               'ylim': [None, None]},
+    'Lu 450': {'cols': ['lu1_450', 'lu2_450'],
+               'xlim': [None, None],
+               'ylim': [None, None]},
+    'Lu 650': {'cols': ['lu1_650', 'lu2_650'],
+               'xlim': [None, None],
+               'ylim': [None, None]},
+    'Lu 850': {'cols': ['lu1_850', 'lu2_850'],
+               'xlim': [None, None],
+               'ylim': [None, None]},
+    'Rss 450': {'cols': ['rss1_450', 'rss2_450'],
+                'xlim': [None, None],
+                'ylim': [0.0, 0.05]},
+    'Rss 650': {'cols': ['rss1_650', 'rss2_650'],
+                'xlim': [None, None],
+                'ylim': [0.0, 0.05]},
+    'Rss 850': {'cols': ['rss1_850', 'rss2_850'],
+                'xlim': [None, None],
+                'ylim': [0.0, 0.05]},
+    'Sss': {'cols': ['css1', 'css2'],
+            'xlim': [None, None],
+            'ylim': [0.0, 500.0]}}
 
 monthly_graph_dict = {'keys': ['css1', 'css2'],
                       'ylim': [0, 500]}
-
-def get_intp_selection():
-    colls = [c for c in intp_columns]
-    dict = {'_id': 0}
-    for c in colls:
-        dict[c] = 1
-    return dict
-
-def get_daily_selection():
-    cols = [c for c in daily_columns]
-    dict = {'_id': 0, 'TIMESTAMP':1}
-    for c in cols:
-        dict[c] = 1
-    return dict
-
-def get_css_selection():
-    cols = [c for c in daily_graph_dict['Sss']]
-    dict = {'_id': 0, 'TIMESTAMP':1}
-    for c in cols:
-        dict[c] = 1
-    return dict
-
-def noteq_filter():
-    # query generation
-    colls = [c for c in calib_cols]
-    filter = [{c: {"$ne": np.nan}} for c in colls]
-    return { "$and": filter}
