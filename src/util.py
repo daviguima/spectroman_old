@@ -3,7 +3,7 @@ import calendar
 from os import listdir, rename
 from os.path import isfile, join, abspath, basename, curdir
 from io import StringIO
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 # 3rd party libraries
 import numpy as np
@@ -107,3 +107,25 @@ def noteq_filter(columns):
     cols = [c for c in columns]
     filter = [{c: {"$ne": np.nan}} for c in cols]
     return { "$and": filter}
+
+def notexists_filter(columns):
+    """
+    Create a not exists filter for the specified columns.
+    """
+    cols = [c for c in columns]
+    filter = [{c: {"$exists": False}} for c in cols]
+    return { "$or": filter}
+
+def fieldstr_filter(columns):
+    """
+    """
+    cols = [c for c in columns]
+    filter = [{c: {"$type": 2}} for c in cols]
+    return { "$or": filter}
+
+def daterange(start_date, end_date):
+    """
+    Create a data range.
+    """
+    for n in range(int((end_date - start_date).days)):
+        yield start_date + timedelta(n)
