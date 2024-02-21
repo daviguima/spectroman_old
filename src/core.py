@@ -1,4 +1,3 @@
-import time
 from os.path import basename
 from datetime import datetime, time, timedelta
 
@@ -117,15 +116,33 @@ class Spectroman:
             except:
                 pass
             else:
-                self.db.insert_docs(doc, conf['DB_COLL_DF'])
+                self.db.insert_doc(doc, conf['DB_COLL_DF'])
             finally:
                 pass
 
+    def convert_docs(self):
+        """
+        Convert string types to float types.
+        """
+        for doc in self.db.fetch_docs(fieldstr_filter(calib_columns),
+                                      {},
+                                      conf['DB_COLL_DF']):
+            values = {}
+            for key in calib_columns:
+                if (type(doc[key]) == str):
+                    values[key] = float('.'.join(doc[key].split(".")[:2]))
+                    # update values if necessary
+            if (len(values) > 0):
+                self.db.update_doc({"_id": doc['_id']},
+                                   {"$set": values},
+                                   conf['DB_COLL_DF'])
     def process_intp(self):
         """
         Process the linear interpolation for the database data.
         """
-        for doc in self.db.fetch_docs({}, {}, conf['DB_COLL_DF']):
+        for doc in self.db.fetch_docs(notexists_filter(intp_columns),
+                                      {},
+                                      conf['DB_COLL_DF']):
             # cache the id
             id = doc['_id']
             # remove id from the dictionary
@@ -138,8 +155,7 @@ class Spectroman:
                                       input_cols,
                                       output_cols,
                                       wl_data)
-
-            # compute the rss values from the interpolated parameters
+                # compute the rss values from the interpolated parameters
             for input_cols, output_cols in rss_param_table:
                 df = self.calc_rss(df, input_cols, output_cols)
                 # get values from the data frame
@@ -182,14 +198,15 @@ class Spectroman:
             finally:
                 pass
 
-    def get_dates(self):
+    def get_dates(self, beg, end):
         """
         Return the list of sorted dates from the database.
         """
         dates = []
         index = 0
         # get time stamp
-        cursor = self.db.fetch_docs({},
+        cursor = self.db.fetch_docs({'TIMESTAMP': {'$gte': beg,
+                                                   '$lt': end}},
                                     {'TIMESTAMP': 1, '_id': 0},
                                     conf['DB_COLL_DF']).sort({'TIMESTAMP': 1})
         # append first date
@@ -199,47 +216,49 @@ class Spectroman:
             if (dates[index] != doc['TIMESTAMP'].date()):
                 dates.append(doc['TIMESTAMP'].date())
                 index = index + 1
-            pass
+
         return dates
 
-    def plot_base_graph(self):
+    def plot_basic_graph(self, date):
         """
         Plot the base graph (15 to 15 minutes), using the database values.
         """
-        for date in self.get_dates():
-            beg = datetime.combine(date, time(6, 0, 0))
-            end = datetime.combine(date, time(18, 15, 0))
-            while beg < end:
-                dts  = beg.strftime("%Y-%m-%d-%H-%M-%S")
-                tmp  = beg + timedelta(minutes=15)
-                docs = []
-                for doc in self.db.fetch_docs({'TIMESTAMP': {'$gte': beg,
-                                                             '$lt': tmp}},
-                                              get_intp_selection(),
-                                              conf['DB_COLL_DF']):
-                    docs.append(doc)
-                    pass
-                if (len(docs) >= 1):
-                    self.plot.basic_graph(dts, docs)
-                    # update beg
-                beg = tmp
-            pass
+        # parse the day range
+        beg = datetime.combine(date, time(6, 0, 0))
+        end = datetime.combine(date, time(18, 15, 0))
+        # generate the graphs
+        while beg < end:
+            tmp = beg + timedelta(minutes=15)
+            docs = []
+            for doc in self.db.fetch_docs({'TIMESTAMP': {'$gte': beg,
+                                                         '$lt': tmp}},
+                                          get_intp_selection(),
+                                          conf['DB_COLL_DF']):
+                docs.append(doc)
+
+            # plot if we have any data
+            if (len(docs) >= 1):
+                self.plot.base_graph(beg.strftime("%Y-%m-%d-%H-%M-%S"), docs)
+
+            # update beg
+            beg = tmp
         pass
 
-    def plot_daily_graph(self):
+    def plot_daily_graph(self, date):
         """
         Plot the daily graph using the database values.
         """
-        for date in self.get_dates():
-            beg = datetime.combine(date, time(6, 0, 0))
-            end = datetime.combine(date, time(18, 0, 0))
-            docs = []
-            for doc in self.db.fetch_docs({'TIMESTAMP': {'$gte': beg,
-                                                         '$lte': end}},
-                                          get_daily_selection(),
-                                          conf['DB_COLL_DF']).\
-                                          sort({'TIMESTAMP': 1}):
-                docs.append(doc)
+        beg = datetime.combine(date, time(6, 0, 0))
+        end = datetime.combine(date, time(18, 0, 0))
+        docs = []
+
+        for doc in self.db.fetch_docs({'TIMESTAMP': {'$gte': beg,
+                                                     '$lte': end}},
+                                      get_daily_selection(),
+                                      conf['DB_COLL_DF']).\
+                                      sort({'TIMESTAMP': 1}):
+            docs.append(doc)
+
             if (len(docs) >= 1):
                 times = [doc['TIMESTAMP'] for doc in docs]
                 self.plot.daily_graph(beg, end, date, times, docs)
@@ -281,12 +300,10 @@ class Spectroman:
         n = len(files)
         gs = {}
 
-        time_start  = time.perf_counter()
-
         for f in files:
             ts = basename(f).split('_')[0]
             gs.setdefault(ts, []).append(file_to_str_io(f))
-            a
+
         i = 0
         for k in list(gs):
             log.info(f'Processing: {k}: {i + 1}/{len(gs)}')
@@ -300,18 +317,13 @@ class Spectroman:
                                    sort=False,
                                    copy=False)
             pass
+
             # generate the rss of the day
             if not df.empty and len(df) > 1:
                 self.plot.base_graph_from_df(df)
                 # update counter
             i = i + 1
-        pass
+
         # move files
         move_csvs(files)
-        # record end time
-        time_end = time.perf_counter()
-        # calculate the duration
-        time_duration = time_end - time_start
-        # report the duration
-        print(f'Took {time_duration:.3f} seconds')
         pass
