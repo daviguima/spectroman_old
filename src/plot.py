@@ -41,7 +41,8 @@ class Plot:
                                  title + dts,
                                  intp_arr,
                                  [doc[k] for k in cols])
-                self.save_fig(fig, 'plots/' + dts)
+        # save figure
+        self.save_fig(fig, 'plots/' + dts)
         pass
 
     def daily_graph(self, beg, end, date, times, docs):
