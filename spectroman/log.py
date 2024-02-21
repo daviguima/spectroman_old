@@ -1,7 +1,7 @@
 import os
 import logging
-
 from datetime import datetime
+
 from spectroman.conf import conf
 
 class Log():

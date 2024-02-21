@@ -1,5 +1,5 @@
 import ftplib
-from os.path import basename, exists
+from os.path import basename, exists, join
 from datetime import datetime
 
 from spectroman.conf import conf
@@ -49,13 +49,17 @@ class Ftp:
         total = len(files)
         log.info(f'{total} total files found...')
         log.info('Attempting to copy...')
-        for i, fname in enumerate(files):
-            f = conf['DATA_OUTPUT'] + basename(fname)
-            if not exists(f):
-                print(f'Downloading {i + 1} of {total}: {fname}...')
+        for i, f in enumerate(files):
+            if not exists(join(conf['DATA_BACKUP'], f)):
+                print(f'Downloading {i + 1} of {total}: {f}...')
                 print(f'Saving copy at: {f}')
-                self.ftp.retrbinary('RETR ' + fname, open(f, 'wb').write)
+                self.ftp.retrbinary('RETR ' + f,
+                                    open(join(conf['DATA_OUTPUT'], f), 'wb').write)
             else:
                 print(f'File already cached: {f}')
+        pass
         self.ftp.quit()
+        pass
+
+    def update_files(self, path=None):
         pass
