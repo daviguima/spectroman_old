@@ -18,6 +18,7 @@ def process_csvs():
 
 def plot_basic(dates):
     """
+    Plot basic graph from dates list.
     """
     s = Spectroman()
     for date in dates:
@@ -27,10 +28,36 @@ def plot_basic(dates):
 
 def plot_daily(dates):
     """
+    Plot daily graph from dates list.
     """
     s = Spectroman()
     for date in dates:
         s.plot_daily_graph(date)
+    pass
+
+def insert_data():
+    """
+    Insert data to the database.
+    """
+    s = Spectroman()
+    s.insert_docs(conf['DATA_OUTPUT'])
+
+def clean_data():
+    """
+    Remove inconsistent data and convert strings to float.
+    """
+    s = Spectroman()
+    s.clean_docs()
+    s.convert_docs()
+    pass
+
+def process_data():
+    """
+    Process database data.
+    """
+    s = Spectroman()
+    s.process_intp()
+    s.process_css()
     pass
 
 def fetch_csvs():
@@ -43,12 +70,6 @@ def fetch_csvs():
     ftp.fetch_files()
     pass
 
-def get_dates(start, end):
-    "Return dates (datetimes) list."
-    return \
-        [d for d in daterange(datetime.strptime(start, "%Y-%m-%d"),
-                              datetime.strptime(end, "%Y-%m-%d"))]
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='SPECTROMAN - Spectral Manager for SPECTROSED '
@@ -57,28 +78,44 @@ if __name__ == "__main__":
                         help='Process csv files',
                         action='store_true')
 
+    parser.add_argument('-p', '--process',
+                        help='Process data',
+                        action='store_true')
+
+    parser.add_argument('-i', '--insert',
+                        help='Clean inconsistent data from the database.',
+                        action='store_true')
+
+    parser.add_argument('--clean',
+                        help='Clean data to the database (mongodb).',
+                        action='store_true')
+
+    parser.add_argument('-a', '--all',
+                        help='Insert and process data.',
+                        action='store_true')
+
     parser.add_argument('-f', '--fetch',
                         help='Download csv files from FTP',
                         action='store_true')
 
     parser.add_argument('-b', '--basic',
-                        help='',
+                        help='Plot basic graph.',
                         action='store_true')
 
     parser.add_argument('-d', '--day',
-                        help='',
+                        help='Plot daily graph.',
                         action='store_true')
 
     parser.add_argument('-m', '--month',
-                        help='',
+                        help='Plot SSS segregation monthly graph.',
                         action='store_true')
 
     parser.add_argument('-s', '--start',
-                        help='',
+                        help='Start date in the format: year-month-day.',
                         nargs='?')
 
     parser.add_argument('-e', '--end',
-                        help='',
+                        help='End date in the format: year-month-day.',
                         nargs='?')
 
     parser.add_argument('-v', '--version',
@@ -92,6 +129,16 @@ if __name__ == "__main__":
         log.info(f'SPECTROMAN version: {__version__}')
     elif args['csv']:
         process_csvs()
+    elif args['insert']:
+        insert_data()
+    elif args['process']:
+        process_data()
+    elif args['clean']:
+        clean_data()
+    elif args['all']:
+        insert_data()
+        clean_data()
+        process_data()
     elif args['basic']:
         plot_basic(get_dates(args['start'], args['end']))
     elif args['day']:
