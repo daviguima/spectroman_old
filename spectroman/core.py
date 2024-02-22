@@ -198,27 +198,6 @@ class Spectroman:
             finally:
                 pass
 
-    def get_dates(self, beg, end):
-        """
-        Return the list of sorted dates from the database.
-        """
-        dates = []
-        index = 0
-        # get time stamp
-        cursor = self.db.fetch_docs({'TIMESTAMP': {'$gte': beg,
-                                                   '$lt': end}},
-                                    {'TIMESTAMP': 1, '_id': 0},
-                                    conf['DB_COLL_DF']).sort({'TIMESTAMP': 1})
-        # append first date
-        dates.append(cursor[0]['TIMESTAMP'].date())
-        for doc in cursor[1:]:
-            # append just unique dates
-            if (dates[index] != doc['TIMESTAMP'].date()):
-                dates.append(doc['TIMESTAMP'].date())
-                index = index + 1
-
-        return dates
-
     def plot_basic_graph(self, date):
         """
         Plot the base graph (15 to 15 minutes), using the database values.
@@ -226,19 +205,26 @@ class Spectroman:
         # parse the day range
         beg = datetime.combine(date, time(6, 0, 0))
         end = datetime.combine(date, time(18, 15, 0))
+        docs = []
+
+        for doc in self.db.fetch_docs({'TIMESTAMP': {'$gte': beg,
+                                                     '$lt': end}},
+                                      get_intp_selection(),
+                                      conf['DB_COLL_DF']):
+            docs.append(doc)
+
         # generate the graphs
         while beg < end:
             tmp = beg + timedelta(minutes=15)
-            docs = []
-            for doc in self.db.fetch_docs({'TIMESTAMP': {'$gte': beg,
-                                                         '$lt': tmp}},
-                                          get_intp_selection(),
-                                          conf['DB_COLL_DF']):
-                docs.append(doc)
+            points = []
+
+            for doc in docs:
+                if (doc['TIMESTAMP'] <= tmp):
+                    points.append(doc)
 
             # plot if we have any data
             if (len(docs) >= 1):
-                self.plot.base_graph(beg.strftime("%Y-%m-%d-%H-%M-%S"), docs)
+                self.plot.base_graph(beg.strftime("%Y-%m-%d-%H-%M-%S"), points)
 
             # update beg
             beg = tmp
