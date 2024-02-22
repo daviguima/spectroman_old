@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from spectroman.log import log
 from spectroman.const import *
+from spectroman.conf import conf
 
 class Plot:
     def __init__(self):
@@ -42,7 +43,7 @@ class Plot:
                                  intp_arr,
                                  [doc[k] for k in cols])
         # save figure
-        self.save_fig(fig, 'plots/' + dts)
+        self.save_fig(fig, 'spectroman/plots/' + dts)
         pass
 
     def daily_graph(self, beg, end, date, times, docs):
@@ -85,7 +86,7 @@ class Plot:
         fig.delaxes(axs[16])
         fig.delaxes(axs[17])
         # save figure
-        self.save_fig(fig, 'plots/' + 'daily_' + date.strftime("%Y-%m-%d"))
+        self.save_fig(fig, conf['PLOT_OUTPUT'] + 'daily_' + date.strftime("%Y-%m-%d"))
         pass
 
     def monthly_css(self, beg, end, times, docs):
@@ -118,7 +119,7 @@ class Plot:
                             wspace=0.2,
                             hspace=0.2)
         # save the figure
-        self.save_fig(fig, 'plots/' + 'sss_' + beg.strftime("%Y-%m"))
+        self.save_fig(fig, conf['PLOT_OUTPUT'] + 'sss_' + beg.strftime("%Y-%m"))
         pass
 
     def plot_lst_values(self, lst, axs, title, dt):
@@ -167,5 +168,5 @@ class Plot:
                          raw=True,
                          axis=1)
                 # save the figure
-            self.save_fig(fig, 'plots/' + datetime)
+            self.save_fig(fig, conf['PLOT_OUTPUT'] + datetime)
             pass
