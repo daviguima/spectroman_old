@@ -75,7 +75,7 @@ def get_intp_selection():
     Get interpolation filter columns (mongodb related).
     """
     colls = [c for c in intp_columns]
-    dict = {'_id': 0}
+    dict = {'_id': 0, 'TIMESTAMP': 1}
     for c in colls:
         dict[c] = 1
     return dict
@@ -129,3 +129,8 @@ def daterange(start_date, end_date):
     """
     for n in range(int((end_date - start_date).days)):
         yield start_date + timedelta(n)
+
+def get_dates(start, end):
+    "Return dates (datetimes) list."
+    return [d for d in daterange(datetime.strptime(start, "%Y-%m-%d"),
+                                 datetime.strptime(end, "%Y-%m-%d"))]
