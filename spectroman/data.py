@@ -8,7 +8,7 @@ def get_wl_dat(fname):
     """
     Return np.ndarray with wl_dat data.
     """
-    fname = 'wl_dat/' + fname
+    fname = 'spectroman/wl_dat/' + fname
     return np.genfromtxt(fname,
                          delimiter = '  ',
                          skip_header = 30,
