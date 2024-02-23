@@ -36,41 +36,42 @@ class Plot:
                                   ["lu1", "lu2"],
                                   ["ld1", "ld2"],
                                   ["rss1", "rss2"]])
+
         for doc in docs:
             for key, title, cols in base_graph_table:
                 self.plot_values(axs[key],
                                  title + dts,
                                  intp_arr,
                                  [doc[k] for k in cols])
-        # save figure
+                # save figure
         self.save_fig(fig, 'spectroman/plots/' + dts)
         pass
 
-    def daily_graph(self, beg, end, date, times, docs):
+    def daily_graph(self, date, docs):
         """
         Plot the daily graph from the selected documents.
         """
         fig, axs = plt.subplots(6, 3, figsize=(40, 32))
         axs = axs.flat
         xfmt = pltdates.DateFormatter('%H:%M')
-        for i, title in enumerate(daily_graph_dict.keys()):
+        times = [doc['TIMESTAMP'] for doc in docs]
 
-            # set y limit (if any)
-            if (daily_graph_dict[title]['ylim'][1] != None and
-                daily_graph_dict[title]['ylim'][0] != None):
-                axs[i].set_ylim(top=daily_graph_dict[title]['ylim'][1],
-                                bottom=daily_graph_dict[title]['ylim'][0])
+        for i, title in enumerate(day_plot_conf.keys()):
+            top = day_plot_conf[title]['ylim'][1]
+            bottom = day_plot_conf[title]['ylim'][0]
+            if (top != None and bottom != None):
+                axs[i].set_ylim(top=top, bottom=bottom)
 
             # set grid and x label format
             axs[i].grid(color='gray', linestyle='--')
             axs[i].xaxis.set_major_formatter(xfmt)
 
             # plot values using the right columns
-            for key in daily_graph_dict[title]['cols']:
+            for col in day_plot_conf[title]['cols']:
                 self.plot_values(axs[i],
                                  title,
                                  times,
-                                 [d[key] for d in docs],
+                                 [d[col] for d in docs],
                                  fmt='o-.')
 
         # adjust the subplots
@@ -80,13 +81,16 @@ class Plot:
                             top=0.9,
                             wspace=0.2,
                             hspace=0.2)
+
+        # parse date to string
+        date = date.strftime("%Y-%m-%d")
         # adjust title
         plt.suptitle(f'{date}', fontsize=50, y=0.96)
         # remove axs
         fig.delaxes(axs[16])
         fig.delaxes(axs[17])
         # save figure
-        self.save_fig(fig, conf['PLOT_OUTPUT'] + 'daily_' + date.strftime("%Y-%m-%d"))
+        self.save_fig(fig, conf['PLOT_OUTPUT'] + 'daily_' + date)
         pass
 
     def monthly_css(self, beg, end, times, docs):
