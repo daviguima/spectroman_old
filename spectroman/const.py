@@ -105,7 +105,7 @@ daily_columns = ['Batt',
                  'css1',
                  'css2']
 
-daily_graph_dict = {
+day_plot_conf = {
     'Batt  V': {'cols': ['Batt'],
                 'xlim': [None, None],
                 'ylim': [None, None]},
@@ -144,10 +144,10 @@ daily_graph_dict = {
                'ylim': [None, None]},
     'Rss 450': {'cols': ['rss1_450', 'rss2_450'],
                 'xlim': [None, None],
-                'ylim': [0.0, 0.05]},
+                'ylim': [0.0, 0.06]},
     'Rss 650': {'cols': ['rss1_650', 'rss2_650'],
                 'xlim': [None, None],
-                'ylim': [0.0, 0.05]},
+                'ylim': [0.0, 0.06]},
     'Rss 850': {'cols': ['rss1_850', 'rss2_850'],
                 'xlim': [None, None],
                 'ylim': [0.0, 0.05]},
