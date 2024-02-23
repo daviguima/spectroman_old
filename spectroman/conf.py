@@ -1,5 +1,6 @@
 from decouple import config
 
+__version__ = '2.0.0'
 
 conf = {
     'FTP_HOST': config('FTP_HOST'),
@@ -17,6 +18,8 @@ conf = {
     'DB_ATLAS_URI': config('DB_ATLAS_URI'),
     'DB_ATLAS_NAME': config('DB_ATLAS_NAME'),
     'DB_ATLAS_COLL': config('DB_ATLAS_COLL'),
+    'PLOT_OUTPUT': config('PLOT_OUTPUT'),
     'LOG_OUTPUT': config('LOG_OUTPUT'),
-    'DATA_OUTPUT': config('DATA_OUTPUT')
+    'DATA_OUTPUT': config('DATA_OUTPUT'),
+    'DATA_BACKUP': config('DATA_BACKUP')
 }

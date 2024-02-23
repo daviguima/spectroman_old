@@ -1,11 +1,25 @@
 import math
 import numpy as np
+from scipy.interpolate import griddata
 
 from spectroman.conf import *
+
+def linear_intp(s, wl, set):
+    """
+    Given a panda Series [s] compute the
+    linear interpolation using the pre defined [set] and
+    [wl] data.
+    """
+    return griddata(wl,
+                    np.array(s),
+                    set,
+                    method='linear')
 
 def calc_reflectance(ed, ld, lu, rho=0.028):
     """
     Compute the reflectance.
+    Given a list of values [ed, ld, lu], compute rss
+    reflectance.
     """
     try:
         rrs = (lu - rho * ld) / ed
@@ -22,23 +36,11 @@ def calc_rrs_reflectance(lst):
     """
     arr = np.array(np.array_split(np.array(lst), 3))
     return np.apply_along_axis(
-        lambda x: calc_reflectance(x[0], x[1], x[2]), 0, arr).round(3)
+        lambda x: calc_reflectance(x[0], x[1], x[2]), 0, arr)
 
-def css_jirau(s):
+def css_jirau(rrs_650, rrs_850):
     "Compute css_jirau using a list of values [rrs850, rrs650]."
-    try:
-        rrs_ir_850 = s['Rrs850']
-        rrs_red_650 = s['Rrs650']
-        css = 13.294 * math.exp(5.2532 * (rrs_ir_850 / rrs_red_650))
-        css = round(css, 2)  # trimm precision to 2 decimals
-    except Exception as e:
-        print(e)
-        css = np.nan
-        if css < 0:
-            css = np.nan
-        if css > 2000:
-            css = 2001.99
-    return css
+    return 13.294 * np.exp((rrs_850 / rrs_650) * 5.2532)
 
 def chla_gitelson(rs665, rs715, rs750):
     # Gitelson 2008
