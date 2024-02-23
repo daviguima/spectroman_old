@@ -149,6 +149,7 @@ class Spectroman:
             doc.pop('_id', None)
             # parse dict to data frame
             df = dict_to_df(doc)
+
             # calculate the interpolation
             for input_cols, output_cols, wl_data in intp_table:
                 df = self.interpolate(df,
@@ -158,7 +159,8 @@ class Spectroman:
                 # compute the rss values from the interpolated parameters
             for input_cols, output_cols in rss_param_table:
                 df = self.calc_rss(df, input_cols, output_cols)
-                # get values from the data frame
+
+            # get values from the data frame
             try:
                 values = df.loc[:,\
                                 ed_cols +
@@ -203,31 +205,41 @@ class Spectroman:
         Plot the base graph (15 to 15 minutes), using the database values.
         """
         # parse the day range
-        beg = datetime.combine(date, time(6, 0, 0))
+        start = datetime.combine(date, time(6, 0, 0))
         end = datetime.combine(date, time(18, 15, 0))
-        docs = []
 
-        for doc in self.db.fetch_docs({'TIMESTAMP': {'$gte': beg,
-                                                     '$lt': end}},
-                                      get_intp_selection(),
-                                      conf['DB_COLL_DF']):
-            docs.append(doc)
+        docs = [d for d in \
+                self.db.fetch_docs({'TIMESTAMP': {'$gte': start,
+                                                  '$lte': end}},
+                                   get_intp_selection(),
+                                   conf['DB_COLL_DF'])\
+                .sort({'TIMESTAMP': 1})]
 
-        # generate the graphs
-        while beg < end:
-            tmp = beg + timedelta(minutes=15)
-            points = []
+        # variation 15 in 15 minutes
+        delta = start + timedelta(minutes=15)
 
-            for doc in docs:
-                if (doc['TIMESTAMP'] <= tmp):
-                    points.append(doc)
+        # save the list of dates and points
+        dates = []
+        point = []
+        points = []
 
-            # plot if we have any data
-            if (len(docs) >= 1):
-                self.plot.base_graph(beg.strftime("%Y-%m-%d-%H-%M-%S"), points)
+        # docs counter
+        i = 0
+        while i < len(docs):
+            if (docs[i]['TIMESTAMP'] <= delta):
+                point.append(docs[i])
+                i += 1
+            else:
+                dates.append(start.strftime("%Y-%m-%d-%H-%M-%S"))
+                points.append(point)
+                start = delta
+                delta = delta + timedelta(minutes=15)
+                point = []
 
-            # update beg
-            beg = tmp
+        # for-each list of points, plot the graph
+        for i in range(len(points)):
+            if (len(points[i]) >= 1):
+                self.plot.base_graph(dates[i], points[i])
         pass
 
     def plot_daily_graph(self, date):
@@ -272,6 +284,7 @@ class Spectroman:
                                           get_css_selection(),
                                           conf['DB_COLL_DF']):
                 docs.append(doc)
+
             if (len(docs) >= 1):
                 times = [doc['TIMESTAMP'] for doc in docs]
                 self.plot.monthly_css(beg, end, times, docs)
