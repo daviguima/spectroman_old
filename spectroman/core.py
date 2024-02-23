@@ -248,19 +248,15 @@ class Spectroman:
         """
         beg = datetime.combine(date, time(6, 0, 0))
         end = datetime.combine(date, time(18, 0, 0))
-        docs = []
+        docs = [d for d in \
+                self.db.fetch_docs({'TIMESTAMP': {'$gte': beg,
+                                                  '$lte': end}},
+                                   get_daily_selection(),
+                                   conf['DB_COLL_DF'])\
+                .sort({'TIMESTAMP': 1})]
 
-        for doc in self.db.fetch_docs({'TIMESTAMP': {'$gte': beg,
-                                                     '$lte': end}},
-                                      get_daily_selection(),
-                                      conf['DB_COLL_DF']).\
-                                      sort({'TIMESTAMP': 1}):
-            docs.append(doc)
-
-            if (len(docs) >= 1):
-                times = [doc['TIMESTAMP'] for doc in docs]
-                self.plot.daily_graph(beg, end, date, times, docs)
-        pass
+        if (len(docs) >= 1):
+            self.plot.daily_graph(date, docs)
 
     def plot_monthly_graph(self):
         """
